@@ -1,11 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { Input } from "@/components/ui/input";
 
 const Map = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState("");
+  const [inputValue, setInputValue] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setMapboxToken(inputValue);
+  };
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -32,6 +39,8 @@ const Map = () => {
       }
     };
 
+    initializeMap();
+
     // Cleanup function
     return () => {
       if (map.current) {
@@ -45,14 +54,21 @@ const Map = () => {
     <div className="relative w-full h-full">
       {!mapboxToken && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-md">
-          <div className="space-y-4 p-4">
+          <form onSubmit={handleSubmit} className="space-y-4 p-4 w-full max-w-md">
             <p className="text-sm text-gray-600">Please enter your Mapbox token:</p>
-            <input
+            <Input
               type="text"
-              className="w-full px-3 py-2 border rounded-md"
+              value={inputValue}
+              className="w-full"
               placeholder="Enter Mapbox token"
-              onChange={(e) => setMapboxToken(e.target.value)}
+              onChange={(e) => setInputValue(e.target.value)}
             />
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Set Token
+            </button>
             <p className="text-xs text-gray-500">
               Get your token at{" "}
               <a
@@ -64,7 +80,7 @@ const Map = () => {
                 mapbox.com
               </a>
             </p>
-          </div>
+          </form>
         </div>
       )}
       <div ref={mapContainer} className="absolute inset-0" />
