@@ -1,12 +1,37 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Header from "@/components/Header";
+import IncidentForm from "@/components/IncidentForm";
+import EmergencyContacts from "@/components/EmergencyContacts";
+import Resources from "@/components/Resources";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <main className="container mx-auto py-8 space-y-8">
+        <section className="text-center space-y-4 animate-fadeIn">
+          <h1 className="text-4xl font-bold text-primary">
+            Women's Safety Incident Reporting System
+          </h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Your safety matters. Report incidents, access resources, and connect with support services.
+            We're here to help you stay safe and informed.
+          </p>
+        </section>
+
+        <section id="report" className="animate-fadeIn">
+          <h2 className="text-2xl font-bold text-center mb-6">Report an Incident</h2>
+          <IncidentForm />
+        </section>
+
+        <section id="emergency-contacts" className="animate-fadeIn">
+          <h2 className="text-2xl font-bold text-center mb-6">Emergency Contacts</h2>
+          <EmergencyContacts />
+        </section>
+
+        <section id="resources" className="animate-fadeIn">
+          <Resources />
+        </section>
+      </main>
     </div>
   );
 };
