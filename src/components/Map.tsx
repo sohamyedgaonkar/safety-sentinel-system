@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const Map = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -11,7 +12,10 @@ const Map = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setMapboxToken(inputValue);
+    if (inputValue.trim()) {
+      setMapboxToken(inputValue.trim());
+      console.log("Token set:", inputValue.trim()); // Debug log
+    }
   };
 
   useEffect(() => {
@@ -63,12 +67,13 @@ const Map = () => {
               placeholder="Enter Mapbox token"
               onChange={(e) => setInputValue(e.target.value)}
             />
-            <button
-              type="submit"
-              className="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={!inputValue.trim()}
             >
               Set Token
-            </button>
+            </Button>
             <p className="text-xs text-gray-500">
               Get your token at{" "}
               <a
