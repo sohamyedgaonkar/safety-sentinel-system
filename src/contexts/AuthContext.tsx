@@ -15,10 +15,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthority, setIsAuthority] = useState(false);
   
-  const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-  );
+  // Check if environment variables are defined
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      'Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables'
+    );
+  }
+  
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   useEffect(() => {
     // Check active sessions and subscribe to auth changes
