@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Analysis from "./pages/Analysis";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import ApplicantForm from "./pages/ApplicantForm";
+import AuthorityDashboard from "./pages/AuthorityDashboard";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +25,8 @@ const App = () => (
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/apply" element={<ApplicantForm />} />
+            <Route path="/authority" element={<AuthorityDashboard />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

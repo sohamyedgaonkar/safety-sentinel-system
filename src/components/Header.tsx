@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 
 const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAuthority } = useAuth();
 
   return (
     <header className="bg-white shadow-sm">
@@ -21,9 +21,20 @@ const Header = () => {
             </Link>
             {user ? (
               <>
-                <Link to="/dashboard" className="text-gray-600 hover:text-primary">
-                  Dashboard
-                </Link>
+                {isAuthority ? (
+                  <Link to="/authority" className="text-gray-600 hover:text-primary">
+                    Authority Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/dashboard" className="text-gray-600 hover:text-primary">
+                      My Applications
+                    </Link>
+                    <Link to="/apply" className="text-gray-600 hover:text-primary">
+                      Submit Application
+                    </Link>
+                  </>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => signOut()}
