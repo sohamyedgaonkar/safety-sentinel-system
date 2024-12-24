@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const Header = () => {
+  const { user, signOut } = useAuth();
+
   return (
     <header className="bg-white shadow-sm">
       <nav className="container mx-auto px-4 py-4">
@@ -15,6 +19,24 @@ const Header = () => {
             <Link to="/analysis" className="text-gray-600 hover:text-primary">
               Analysis
             </Link>
+            {user ? (
+              <>
+                <Link to="/dashboard" className="text-gray-600 hover:text-primary">
+                  Dashboard
+                </Link>
+                <Button
+                  variant="outline"
+                  onClick={() => signOut()}
+                  className="text-gray-600 hover:text-primary"
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Link to="/login" className="text-gray-600 hover:text-primary">
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </nav>
