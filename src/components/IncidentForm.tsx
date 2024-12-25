@@ -47,7 +47,6 @@ const IncidentForm = () => {
           type: selectedType,
           description,
           status: "pending",
-          is_anonymous: isAnonymous,
         },
       ]);
 
