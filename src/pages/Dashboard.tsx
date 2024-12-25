@@ -9,7 +9,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 type Incident = {
   id: string;
@@ -91,9 +91,7 @@ const Dashboard = () => {
                       <XAxis dataKey="name" />
                       <YAxis />
                       <Bar dataKey="value" fill="currentColor" />
-                      <ChartTooltip>
-                        <ChartTooltipContent />
-                      </ChartTooltip>
+                      <Tooltip content={<ChartTooltipContent />} />
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
