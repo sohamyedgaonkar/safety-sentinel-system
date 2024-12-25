@@ -34,7 +34,7 @@ const Dashboard = () => {
     const fetchIncidents = async () => {
       const { data, error } = await supabase
         .from('incidents')
-        .select('id, created_at, user_id, incident_type, description, status')
+        .select('id, created_at, incident_type, description, status')
         .eq('user_id', user.id);
 
       if (error) {
