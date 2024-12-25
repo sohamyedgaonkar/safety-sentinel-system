@@ -44,7 +44,7 @@ const IncidentForm = () => {
       const { error } = await supabase.from("incidents").insert([
         {
           user_id: isAnonymous ? null : user.id,
-          type: selectedType,
+          incident_type: selectedType, // Changed from 'type' to 'incident_type'
           description,
           status: "pending",
         },
