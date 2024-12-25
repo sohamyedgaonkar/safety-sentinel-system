@@ -3,8 +3,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
-type Application = {
+type Incident = {
   id: string;
   created_at: string;
   status: string;
@@ -13,9 +20,10 @@ type Application = {
 };
 
 const Dashboard = () => {
-  const { user, supabase, isAuthority } = useAuth();
+  const { user, supabase } = useAuth();
   const navigate = useNavigate();
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [statistics, setStatistics] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -23,49 +31,97 @@ const Dashboard = () => {
       return;
     }
 
-    const fetchApplications = async () => {
-      const query = isAuthority
-        ? supabase.from('applications').select('*')
-        : supabase.from('applications').select('*').eq('user_id', user.id);
-
-      const { data, error } = await query;
+    const fetchIncidents = async () => {
+      const { data, error } = await supabase
+        .from('incidents')
+        .select('*')
+        .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error fetching applications:', error);
+        console.error('Error fetching incidents:', error);
         return;
       }
 
-      setApplications(data || []);
+      setIncidents(data || []);
+
+      // Calculate statistics
+      const stats = data?.reduce((acc: any, incident: Incident) => {
+        acc[incident.type] = (acc[incident.type] || 0) + 1;
+        return acc;
+      }, {});
+
+      const formattedStats = Object.entries(stats || {}).map(([name, value]) => ({
+        name,
+        value,
+      }));
+
+      setStatistics(formattedStats);
     };
 
-    fetchApplications();
-  }, [user, isAuthority]);
+    fetchIncidents();
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-8">
-          {isAuthority ? 'All Applications' : 'My Applications'}
-        </h1>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {applications.map((application) => (
-            <Card key={application.id}>
+        <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+        
+        <Tabs defaultValue="statistics" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="statistics">Statistics</TabsTrigger>
+            <TabsTrigger value="incidents">My Reported Incidents</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="statistics" className="space-y-6">
+            <Card>
               <CardHeader>
-                <CardTitle>{application.type}</CardTitle>
+                <CardTitle>Incident Statistics</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-500">
-                  Status: {application.status}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Date: {new Date(application.created_at).toLocaleDateString()}
-                </p>
-                <p className="mt-2">{application.description}</p>
+              <CardContent className="h-[300px]">
+                <ChartContainer
+                  config={{
+                    incidents: {
+                      color: "hsl(var(--primary))",
+                    },
+                  }}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={statistics}>
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Bar dataKey="value" fill="currentColor" />
+                      <ChartTooltip>
+                        <ChartTooltipContent />
+                      </ChartTooltip>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="incidents" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {incidents.map((incident) => (
+                <Card key={incident.id}>
+                  <CardHeader>
+                    <CardTitle>{incident.type}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-500">
+                      Status: {incident.status}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Date: {new Date(incident.created_at).toLocaleDateString()}
+                    </p>
+                    <p className="mt-2">{incident.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

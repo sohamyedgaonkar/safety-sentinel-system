@@ -2,8 +2,13 @@ import Header from "@/components/Header";
 import IncidentForm from "@/components/IncidentForm";
 import EmergencyContacts from "@/components/EmergencyContacts";
 import Resources from "@/components/Resources";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -16,6 +21,13 @@ const Index = () => {
             Your safety matters. Report incidents, access resources, and connect with support services.
             We're here to help you stay safe and informed.
           </p>
+          {user && (
+            <Link to="/dashboard">
+              <Button variant="outline" className="mt-4">
+                View Dashboard
+              </Button>
+            </Link>
+          )}
         </section>
 
         <section id="report" className="animate-fadeIn">

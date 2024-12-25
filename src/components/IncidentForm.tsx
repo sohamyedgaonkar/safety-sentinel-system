@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import Map from "./Map";
 
 const incidentTypes = [
@@ -16,16 +18,49 @@ const incidentTypes = [
 ];
 
 const IncidentForm = () => {
+  const navigate = useNavigate();
+  const { user, supabase } = useAuth();
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [selectedType, setSelectedType] = useState("");
-  const { toast } = useToast();
+  const [description, setDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Incident Reported",
-      description: "Your report has been submitted successfully. Stay safe!",
-    });
+    
+    if (!user) {
+      toast.error("Please sign in to submit a report");
+      navigate("/login");
+      return;
+    }
+
+    if (!selectedType) {
+      toast.error("Please select an incident type");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from("incidents").insert([
+        {
+          user_id: isAnonymous ? null : user.id,
+          type: selectedType,
+          description,
+          status: "pending",
+          is_anonymous: isAnonymous,
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast.success("Incident reported successfully");
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Error submitting incident:", error);
+      toast.error("Failed to submit incident. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -59,6 +94,9 @@ const IncidentForm = () => {
         <Textarea
           placeholder="Please describe what happened..."
           className="min-h-[100px]"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
         />
       </div>
 
@@ -76,8 +114,8 @@ const IncidentForm = () => {
         <Label htmlFor="anonymous">Report Anonymously</Label>
       </div>
 
-      <Button type="submit" className="w-full">
-        Submit Report
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "Submitting..." : "Submit Report"}
       </Button>
     </form>
   );
