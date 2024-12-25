@@ -23,6 +23,8 @@ const IncidentForm = () => {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [selectedType, setSelectedType] = useState("");
   const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [evidence, setEvidence] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,26 +41,64 @@ const IncidentForm = () => {
       return;
     }
 
+    if (!description.trim()) {
+      toast.error("Please provide a description of the incident");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("incidents").insert([
-        {
-          user_id: isAnonymous ? null : user.id,
-          incident_type: selectedType, // Changed from 'type' to 'incident_type'
-          description,
-          status: "pending",
-        },
-      ]);
+      // First, upload evidence if provided
+      let evidenceUrl = null;
+      if (evidence) {
+        const fileExt = evidence.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const { data: fileData, error: uploadError } = await supabase.storage
+          .from('evidence')
+          .upload(fileName, evidence);
 
-      if (error) throw error;
+        if (uploadError) {
+          throw new Error(`Error uploading evidence: ${uploadError.message}`);
+        }
+        evidenceUrl = fileData?.path || null;
+      }
+
+      // Then, insert the incident record
+      const { error: insertError } = await supabase
+        .from('incidents_new')
+        .insert([
+          {
+            user_id: isAnonymous ? null : user.id,
+            incident_type: selectedType,
+            description: description.trim(),
+            location,
+            evidence_url: evidenceUrl,
+            status: "pending",
+            reported_at: new Date().toISOString(),
+            is_anonymous: isAnonymous,
+          },
+        ]);
+
+      if (insertError) throw insertError;
 
       toast.success("Incident reported successfully");
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting incident:", error);
-      toast.error("Failed to submit incident. Please try again.");
+      toast.error(error.message || "Failed to submit incident. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error("File size should be less than 5MB");
+        return;
+      }
+      setEvidence(file);
     }
   };
 
@@ -84,7 +124,7 @@ const IncidentForm = () => {
       <div className="space-y-2">
         <Label>Location</Label>
         <div className="h-[200px] rounded-md overflow-hidden">
-          <Map />
+          <Map onLocationSelect={(loc) => setLocation(loc)} />
         </div>
       </div>
 
@@ -101,7 +141,13 @@ const IncidentForm = () => {
 
       <div className="space-y-2">
         <Label>Evidence (Optional)</Label>
-        <Input type="file" accept="image/*,video/*" />
+        <Input 
+          type="file" 
+          accept="image/*,video/*"
+          onChange={handleFileChange}
+          className="cursor-pointer"
+        />
+        <p className="text-xs text-gray-500">Maximum file size: 5MB</p>
       </div>
 
       <div className="flex items-center space-x-2">

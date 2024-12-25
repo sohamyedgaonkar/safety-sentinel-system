@@ -4,9 +4,14 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const Map = () => {
+interface MapProps {
+  onLocationSelect?: (location: string) => void;
+}
+
+const Map: React.FC<MapProps> = ({ onLocationSelect }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const marker = useRef<mapboxgl.Marker | null>(null);
   const [mapboxToken, setMapboxToken] = useState("");
   const [inputValue, setInputValue] = useState("");
 
@@ -14,7 +19,23 @@ const Map = () => {
     e.preventDefault();
     if (inputValue.trim()) {
       setMapboxToken(inputValue.trim());
-      console.log("Token set:", inputValue.trim()); // Debug log
+      console.log("Token set:", inputValue.trim());
+    }
+  };
+
+  const handleMapClick = (e: mapboxgl.MapMouseEvent) => {
+    const { lng, lat } = e.lngLat;
+    
+    if (marker.current) {
+      marker.current.remove();
+    }
+    
+    marker.current = new mapboxgl.Marker()
+      .setLngLat([lng, lat])
+      .addTo(map.current!);
+
+    if (onLocationSelect) {
+      onLocationSelect(`${lat},${lng}`);
     }
   };
 
@@ -34,8 +55,8 @@ const Map = () => {
           zoom: 9,
         });
 
-        // Add navigation controls
         newMap.addControl(new mapboxgl.NavigationControl(), "top-right");
+        newMap.on('click', handleMapClick);
 
         map.current = newMap;
       } catch (error) {
@@ -45,7 +66,6 @@ const Map = () => {
 
     initializeMap();
 
-    // Cleanup function
     return () => {
       if (map.current) {
         map.current.remove();
