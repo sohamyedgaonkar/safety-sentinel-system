@@ -77,12 +77,30 @@ const IncidentForm = () => {
       if (evidence) {
         const fileExt = evidence.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
+        
+        // First, check if the bucket exists and is accessible
+        const { data: bucketData, error: bucketError } = await supabase
+          .storage
+          .getBucket('evidence');
+
+        if (bucketError) {
+          console.error("Bucket access error:", bucketError);
+          throw new Error("Unable to access storage. Please try again later.");
+        }
+
+        // Attempt to upload with proper error handling
         const { data: fileData, error: uploadError } = await supabase.storage
           .from('evidence')
-          .upload(fileName, evidence);
+          .upload(`${user?.id}/${fileName}`, evidence, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) {
           console.error("File upload error:", uploadError);
+          if (uploadError.message.includes("security policy")) {
+            throw new Error("Permission denied. Please ensure you're logged in.");
+          }
           throw new Error(`Error uploading evidence: ${uploadError.message}`);
         }
         evidencePath = fileData?.path || null;
@@ -93,7 +111,7 @@ const IncidentForm = () => {
         .from('incidents')
         .insert([
           {
-            user_id: isAnonymous ? null : user.id,
+            user_id: isAnonymous ? null : user?.id,
             type: selectedType,
             description: description.trim(),
             location: location.trim() || null, // Allow null location
