@@ -9,6 +9,9 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import Map from "./Map";
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/gif", "video/mp4"];
+
 const incidentTypes = [
   "Harassment",
   "Stalking",
@@ -27,24 +30,49 @@ const IncidentForm = () => {
   const [evidence, setEvidence] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const validateForm = () => {
     if (!user) {
       toast.error("Please sign in to submit a report");
       navigate("/login");
-      return;
+      return false;
     }
 
     if (!selectedType) {
       toast.error("Please select an incident type");
-      return;
+      return false;
     }
 
     if (!description.trim()) {
       toast.error("Please provide a description of the incident");
-      return;
+      return false;
     }
+
+    if (!location.trim()) {
+      toast.error("Please select a location on the map");
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateFile = (file: File): boolean => {
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      toast.error("Invalid file type. Please upload an image or video file.");
+      return false;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File size should be less than 5MB");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
     try {
@@ -58,6 +86,7 @@ const IncidentForm = () => {
           .upload(fileName, evidence);
 
         if (uploadError) {
+          console.error("File upload error:", uploadError);
           throw new Error(`Error uploading evidence: ${uploadError.message}`);
         }
         evidencePath = fileData?.path || null;
@@ -72,14 +101,17 @@ const IncidentForm = () => {
             type: selectedType,
             description: description.trim(),
             location,
-            evidence_file: evidencePath, // Changed to evidence_file to match database schema
+            evidence_file: evidencePath,
             status: "pending",
             reported_at: new Date().toISOString(),
             is_anonymous: isAnonymous,
           },
         ]);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Database insert error:", insertError);
+        throw insertError;
+      }
 
       toast.success("Incident reported successfully");
       navigate("/dashboard");
@@ -94,11 +126,12 @@ const IncidentForm = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast.error("File size should be less than 5MB");
-        return;
+      if (validateFile(file)) {
+        setEvidence(file);
+      } else {
+        e.target.value = ''; // Reset input
+        setEvidence(null);
       }
-      setEvidence(file);
     }
   };
 
@@ -143,11 +176,11 @@ const IncidentForm = () => {
         <Label>Evidence (Optional)</Label>
         <Input 
           type="file" 
-          accept="image/*,video/*"
+          accept={ALLOWED_FILE_TYPES.join(',')}
           onChange={handleFileChange}
           className="cursor-pointer"
         />
-        <p className="text-xs text-gray-500">Maximum file size: 5MB</p>
+        <p className="text-xs text-gray-500">Maximum file size: 5MB. Supported formats: JPG, PNG, GIF, MP4</p>
       </div>
 
       <div className="flex items-center space-x-2">
@@ -159,7 +192,11 @@ const IncidentForm = () => {
         <Label htmlFor="anonymous">Report Anonymously</Label>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={isSubmitting}
+      >
         {isSubmitting ? "Submitting..." : "Submit Report"}
       </Button>
     </form>
