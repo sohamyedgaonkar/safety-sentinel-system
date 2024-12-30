@@ -13,9 +13,9 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recha
 
 type Incident = {
   id: string;
-  created_at: string;
+  reported_at: string; // Changed from created_at to reported_at to match the database schema
   status: string;
-  type: string;  // Changed back to type to match database schema
+  type: string;
   description: string;
 };
 
@@ -34,7 +34,7 @@ const Dashboard = () => {
     const fetchIncidents = async () => {
       const { data, error } = await supabase
         .from('incidents')
-        .select('id, created_at, type, description, status')  // Changed back to type
+        .select('id, reported_at, type, description, status') // Changed created_at to reported_at
         .eq('user_id', user.id);
 
       if (error) {
@@ -46,7 +46,7 @@ const Dashboard = () => {
 
       // Calculate statistics
       const stats = data?.reduce((acc: any, incident: Incident) => {
-        acc[incident.type] = (acc[incident.type] || 0) + 1;  // Changed back to type
+        acc[incident.type] = (acc[incident.type] || 0) + 1;
         return acc;
       }, {});
 
@@ -104,14 +104,14 @@ const Dashboard = () => {
               {incidents.map((incident) => (
                 <Card key={incident.id}>
                   <CardHeader>
-                    <CardTitle>{incident.type}</CardTitle>  {/* Changed back to type */}
+                    <CardTitle>{incident.type}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-gray-500">
                       Status: {incident.status}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Date: {new Date(incident.created_at).toLocaleDateString()}
+                      Date: {new Date(incident.reported_at).toLocaleDateString()} {/* Changed from created_at to reported_at */}
                     </p>
                     <p className="mt-2">{incident.description}</p>
                   </CardContent>
