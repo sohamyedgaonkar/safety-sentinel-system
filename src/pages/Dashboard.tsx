@@ -15,7 +15,7 @@ type Incident = {
   id: string;
   created_at: string;
   status: string;
-  incident_type: string;  // Changed from type to incident_type
+  type: string;  // Changed back to type to match database schema
   description: string;
 };
 
@@ -34,7 +34,7 @@ const Dashboard = () => {
     const fetchIncidents = async () => {
       const { data, error } = await supabase
         .from('incidents')
-        .select('id, created_at, incident_type, description, status')  // Changed type to incident_type
+        .select('id, created_at, type, description, status')  // Changed back to type
         .eq('user_id', user.id);
 
       if (error) {
@@ -46,7 +46,7 @@ const Dashboard = () => {
 
       // Calculate statistics
       const stats = data?.reduce((acc: any, incident: Incident) => {
-        acc[incident.incident_type] = (acc[incident.incident_type] || 0) + 1;  // Changed incident_type
+        acc[incident.type] = (acc[incident.type] || 0) + 1;  // Changed back to type
         return acc;
       }, {});
 
@@ -104,7 +104,7 @@ const Dashboard = () => {
               {incidents.map((incident) => (
                 <Card key={incident.id}>
                   <CardHeader>
-                    <CardTitle>{incident.incident_type}</CardTitle>  {/* Changed from type to incident_type */}
+                    <CardTitle>{incident.type}</CardTitle>  {/* Changed back to type */}
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-gray-500">
