@@ -72,7 +72,7 @@ const IncidentForm = () => {
             type: selectedType,
             description: description.trim(),
             location,
-            evidence: evidencePath, // Changed from evidence_url to evidence
+            evidence_file: evidencePath, // Changed to evidence_file to match database schema
             status: "pending",
             reported_at: new Date().toISOString(),
             is_anonymous: isAnonymous,
