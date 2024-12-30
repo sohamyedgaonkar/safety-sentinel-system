@@ -49,7 +49,7 @@ const IncidentForm = () => {
     setIsSubmitting(true);
     try {
       // Handle the file upload if provided
-      let evidenceUrl = null;
+      let evidencePath = null;
       if (evidence) {
         const fileExt = evidence.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
@@ -60,7 +60,7 @@ const IncidentForm = () => {
         if (uploadError) {
           throw new Error(`Error uploading evidence: ${uploadError.message}`);
         }
-        evidenceUrl = fileData?.path || null;
+        evidencePath = fileData?.path || null;
       }
 
       // Insert the incident record
@@ -72,7 +72,7 @@ const IncidentForm = () => {
             type: selectedType,
             description: description.trim(),
             location,
-            evidence_url: evidenceUrl,
+            evidence: evidencePath, // Changed from evidence_url to evidence
             status: "pending",
             reported_at: new Date().toISOString(),
             is_anonymous: isAnonymous,
