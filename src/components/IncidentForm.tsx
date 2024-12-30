@@ -111,7 +111,7 @@ const IncidentForm = () => {
         .from('incidents')
         .insert([
           {
-            user_id: isAnonymous ? null : user?.id,
+            user_id: user?.id,
             type: selectedType,
             description: description.trim(),
             location: location.trim() || null, // Allow null location
