@@ -48,22 +48,7 @@ const IncidentForm = () => {
 
     setIsSubmitting(true);
     try {
-      // First, check if the bucket exists and create it if it doesn't
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const evidenceBucket = buckets?.find(bucket => bucket.name === 'evidence');
-      
-      if (!evidenceBucket) {
-        const { error: bucketError } = await supabase.storage.createBucket('evidence', {
-          public: false,
-          fileSizeLimit: 5242880, // 5MB in bytes
-        });
-        
-        if (bucketError) {
-          throw new Error(`Error creating bucket: ${bucketError.message}`);
-        }
-      }
-
-      // Then handle the file upload if provided
+      // Handle the file upload if provided
       let evidenceUrl = null;
       if (evidence) {
         const fileExt = evidence.name.split('.').pop();
@@ -78,7 +63,7 @@ const IncidentForm = () => {
         evidenceUrl = fileData?.path || null;
       }
 
-      // Finally, insert the incident record
+      // Insert the incident record
       const { error: insertError } = await supabase
         .from('incidents')
         .insert([
