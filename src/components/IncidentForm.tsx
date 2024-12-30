@@ -47,11 +47,7 @@ const IncidentForm = () => {
       return false;
     }
 
-    if (!location.trim()) {
-      toast.error("Please select a location on the map");
-      return false;
-    }
-
+    // Removed location validation since it's now optional
     return true;
   };
 
@@ -100,7 +96,7 @@ const IncidentForm = () => {
             user_id: isAnonymous ? null : user.id,
             type: selectedType,
             description: description.trim(),
-            location,
+            location: location.trim() || null, // Allow null location
             evidence_file: evidencePath,
             status: "pending",
             reported_at: new Date().toISOString(),
@@ -155,7 +151,7 @@ const IncidentForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label>Location</Label>
+        <Label>Location (Optional)</Label>
         <div className="h-[200px] rounded-md overflow-hidden">
           <Map onLocationSelect={(loc) => setLocation(loc)} />
         </div>
