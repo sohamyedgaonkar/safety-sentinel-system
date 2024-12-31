@@ -31,7 +31,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
     setSupabase(supabaseClient);
 
-    // Check active sessions and subscribe to auth changes
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -54,19 +53,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const checkUserRole = async (supabaseClient: SupabaseClient, userId: string) => {
-    const { data, error } = await supabaseClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .single();
+    try {
+      const { data, error } = await supabaseClient
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
 
-    if (error) {
-      console.error('Error checking user role:', error);
+      if (error) {
+        console.error('Error checking user role:', error);
+        setIsAuthority(false);
+        return;
+      }
+
+      const hasAuthorityRole = data?.role === 'authority';
+      setIsAuthority(hasAuthorityRole);
+
+      if (!hasAuthorityRole) {
+        toast.error('This account does not have authority access');
+        await supabaseClient.auth.signOut();
+      }
+    } catch (error) {
+      console.error('Error in checkUserRole:', error);
       setIsAuthority(false);
-      return;
     }
-
-    setIsAuthority(data?.role === 'authority');
   };
 
   const signIn = async (email: string, password: string) => {
