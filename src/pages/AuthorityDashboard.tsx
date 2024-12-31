@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -16,11 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
-type Application = {
+type Incident = {
   id: string;
-  created_at: string;
+  reported_at: string;
   status: string;
   type: string;
   description: string;
@@ -30,56 +29,46 @@ type Application = {
 const AuthorityDashboard = () => {
   const { user, supabase, isAuthority } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
 
   useEffect(() => {
     if (!user || !isAuthority) {
-      navigate('/login');
+      navigate('/authority-login');
       return;
     }
 
-    fetchApplications();
+    fetchIncidents();
   }, [user, isAuthority]);
 
-  const fetchApplications = async () => {
+  const fetchIncidents = async () => {
     const { data, error } = await supabase
-      .from('applications')
+      .from('incidents')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('reported_at', { ascending: false });
 
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch applications',
-        variant: 'destructive',
-      });
+      toast.error('Failed to fetch incidents');
+      console.error('Error:', error);
       return;
     }
 
-    setApplications(data || []);
+    setIncidents(data || []);
   };
 
-  const updateApplicationStatus = async (id: string, newStatus: string) => {
+  const updateIncidentStatus = async (id: string, newStatus: string) => {
     const { error } = await supabase
-      .from('applications')
+      .from('incidents')
       .update({ status: newStatus })
       .eq('id', id);
 
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update application status',
-        variant: 'destructive',
-      });
+      toast.error('Failed to update incident status');
+      console.error('Error:', error);
       return;
     }
 
-    toast({
-      title: 'Success',
-      description: 'Application status updated successfully',
-    });
-    fetchApplications();
+    toast.success('Incident status updated successfully');
+    fetchIncidents();
   };
 
   return (
@@ -88,15 +77,15 @@ const AuthorityDashboard = () => {
       <main className="container mx-auto py-8">
         <h1 className="text-3xl font-bold mb-8">Authority Dashboard</h1>
         <div className="grid gap-6">
-          {applications.map((application) => (
-            <Card key={application.id}>
+          {incidents.map((incident) => (
+            <Card key={incident.id}>
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
-                  <span>{application.type}</span>
+                  <span>{incident.type}</span>
                   <Select
-                    defaultValue={application.status}
+                    defaultValue={incident.status}
                     onValueChange={(value) =>
-                      updateApplicationStatus(application.id, value)
+                      updateIncidentStatus(incident.id, value)
                     }
                   >
                     <SelectTrigger className="w-[180px]">
@@ -105,18 +94,17 @@ const AuthorityDashboard = () => {
                     <SelectContent>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="in_review">In Review</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
                     </SelectContent>
                   </Select>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-500">
-                  Submitted on:{' '}
-                  {new Date(application.created_at).toLocaleDateString()}
+                  Reported on: {new Date(incident.reported_at).toLocaleDateString()}
                 </p>
-                <p className="mt-4">{application.description}</p>
+                <p className="mt-4">{incident.description}</p>
               </CardContent>
             </Card>
           ))}
