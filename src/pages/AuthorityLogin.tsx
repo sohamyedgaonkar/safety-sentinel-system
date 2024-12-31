@@ -10,21 +10,50 @@ const AuthorityLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, isAuthority } = useAuth();
   const navigate = useNavigate();
+
+  const validateEmail = (email: string) => {
+    return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate email format
+    if (!validateEmail(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       await signIn(email, password);
-      // The AuthContext will handle checking if the user is an authority
-      // and redirect accordingly
+      
+      // Check if the user is an authority after signing in
+      if (!isAuthority) {
+        toast.error('This account does not have authority access');
+        return;
+      }
+      
+      toast.success('Signed in successfully');
       navigate('/authority');
     } catch (error: any) {
-      toast.error('Invalid credentials. Please try again.');
       console.error('Login error:', error);
+      
+      // Handle specific error cases
+      if (error.message?.includes('invalid_credentials')) {
+        toast.error('Invalid email or password. Please check your credentials and try again.');
+      } else {
+        toast.error('An error occurred while signing in. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -39,6 +68,9 @@ const AuthorityLogin = () => {
             <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
               Authority Sign In
             </h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Sign in with your authority credentials
+            </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4 rounded-md shadow-sm">
@@ -54,6 +86,7 @@ const AuthorityLogin = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
+                  className="block w-full"
                 />
               </div>
               <div>
@@ -68,6 +101,7 @@ const AuthorityLogin = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
+                  className="block w-full"
                 />
               </div>
             </div>
