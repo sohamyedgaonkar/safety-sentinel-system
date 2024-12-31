@@ -47,9 +47,10 @@ const AuthorityDashboard = () => {
       console.log('Fetching incidents...');
       const { data, error } = await supabase
         .from('incidents')
-        .select('*') // Ensure all fields are selected.
+        .select('*')
+        .not('user_id', 'is', null) // Filter to fetch only incidents where user_id is not null.
         .order('reported_at', { ascending: false })
-        .limit(1000); // Ensure no rows are skipped by default limits.
+        .limit(1000); // Ensure no rows are skipped.
 
       if (error) {
         console.error('Error fetching incidents:', error);
