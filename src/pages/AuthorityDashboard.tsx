@@ -41,34 +41,51 @@ const AuthorityDashboard = () => {
   }, [user, isAuthority]);
 
   const fetchIncidents = async () => {
-    const { data, error } = await supabase
-      .from('incidents')
-      .select('*')
-      .order('reported_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('incidents')
+        .select('*')
+        .order('reported_at', { ascending: false });
 
-    if (error) {
-      toast.error('Failed to fetch incidents');
-      console.error('Error:', error);
-      return;
+      if (error) {
+        console.error('Error fetching incidents:', error);
+        toast.error('Failed to fetch incidents');
+        return;
+      }
+
+      if (!data) {
+        console.log('No incidents found');
+        setIncidents([]);
+        return;
+      }
+
+      console.log('Fetched incidents:', data);
+      setIncidents(data);
+    } catch (error) {
+      console.error('Error in fetchIncidents:', error);
+      toast.error('An error occurred while fetching incidents');
     }
-
-    setIncidents(data || []);
   };
 
   const updateIncidentStatus = async (id: string, newStatus: string) => {
-    const { error } = await supabase
-      .from('incidents')
-      .update({ status: newStatus })
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('incidents')
+        .update({ status: newStatus })
+        .eq('id', id);
 
-    if (error) {
-      toast.error('Failed to update incident status');
-      console.error('Error:', error);
-      return;
+      if (error) {
+        console.error('Error updating incident status:', error);
+        toast.error('Failed to update incident status');
+        return;
+      }
+
+      toast.success('Incident status updated successfully');
+      fetchIncidents();
+    } catch (error) {
+      console.error('Error in updateIncidentStatus:', error);
+      toast.error('An error occurred while updating the status');
     }
-
-    toast.success('Incident status updated successfully');
-    fetchIncidents();
   };
 
   return (
@@ -76,39 +93,43 @@ const AuthorityDashboard = () => {
       <Header />
       <main className="container mx-auto py-8">
         <h1 className="text-3xl font-bold mb-8">Authority Dashboard</h1>
-        <div className="grid gap-6">
-          {incidents.map((incident) => (
-            <Card key={incident.id}>
-              <CardHeader>
-                <CardTitle className="flex justify-between items-center">
-                  <span>{incident.type}</span>
-                  <Select
-                    defaultValue={incident.status}
-                    onValueChange={(value) =>
-                      updateIncidentStatus(incident.id, value)
-                    }
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Update status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_review">In Review</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-500">
-                  Reported on: {new Date(incident.reported_at).toLocaleDateString()}
-                </p>
-                <p className="mt-4">{incident.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {incidents.length === 0 ? (
+          <p className="text-center text-gray-500">No incidents reported yet.</p>
+        ) : (
+          <div className="grid gap-6">
+            {incidents.map((incident) => (
+              <Card key={incident.id}>
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-center">
+                    <span>{incident.type}</span>
+                    <Select
+                      defaultValue={incident.status}
+                      onValueChange={(value) =>
+                        updateIncidentStatus(incident.id, value)
+                      }
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Update status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in_review">In Review</SelectItem>
+                        <SelectItem value="resolved">Resolved</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500">
+                    Reported on: {new Date(incident.reported_at).toLocaleDateString()}
+                  </p>
+                  <p className="mt-4">{incident.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
