@@ -48,8 +48,6 @@ const AuthorityDashboard = () => {
       const { data, error } = await supabase
         .from('incidents')
         .select('*')
-        .not('user_id', 'is', null) // Filter to fetch only incidents where user_id is not null.
-        .order('reported_at', { ascending: false })
         .limit(1000); // Ensure no rows are skipped.
 
       if (error) {
