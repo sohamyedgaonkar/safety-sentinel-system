@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkUserRole(session.user.id);
+        checkUserRole(supabaseClient, session.user.id);
       }
     });
 
@@ -44,28 +44,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkUserRole(session.user.id);
+        checkUserRole(supabaseClient, session.user.id);
+      } else {
+        setIsAuthority(false);
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkUserRole = async (userId: string) => {
-    if (!supabase || !userId) {
-      setIsAuthority(false);
-      return;
-    }
-
-    const { data, error } = await supabase
+  const checkUserRole = async (supabaseClient: SupabaseClient, userId: string) => {
+    const { data, error } = await supabaseClient
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
       .single();
 
-    if (!error && data) {
-      setIsAuthority(data.role === 'authority');
+    if (error) {
+      console.error('Error checking user role:', error);
+      setIsAuthority(false);
+      return;
     }
+
+    setIsAuthority(data?.role === 'authority');
   };
 
   const signIn = async (email: string, password: string) => {
@@ -73,10 +74,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       toast.error('Supabase client not initialized');
       return;
     }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
     if (error) throw error;
   };
 
@@ -87,6 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+    setIsAuthority(false);
   };
 
   if (!supabase) {
