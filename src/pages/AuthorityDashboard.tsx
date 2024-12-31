@@ -42,6 +42,7 @@ const AuthorityDashboard = () => {
 
   const fetchIncidents = async () => {
     try {
+      console.log('Fetching incidents...');
       const { data, error } = await supabase
         .from('incidents')
         .select('*')
@@ -60,6 +61,7 @@ const AuthorityDashboard = () => {
       }
 
       console.log('Fetched incidents:', data);
+      console.log('Number of incidents:', data.length);
       setIncidents(data);
     } catch (error) {
       console.error('Error in fetchIncidents:', error);
@@ -69,6 +71,7 @@ const AuthorityDashboard = () => {
 
   const updateIncidentStatus = async (id: string, newStatus: string) => {
     try {
+      console.log('Updating incident status:', { id, newStatus });
       const { error } = await supabase
         .from('incidents')
         .update({ status: newStatus })
@@ -93,6 +96,9 @@ const AuthorityDashboard = () => {
       <Header />
       <main className="container mx-auto py-8">
         <h1 className="text-3xl font-bold mb-8">Authority Dashboard</h1>
+        <div className="mb-4">
+          <p className="text-gray-600">Total Incidents: {incidents.length}</p>
+        </div>
         {incidents.length === 0 ? (
           <p className="text-center text-gray-500">No incidents reported yet.</p>
         ) : (
