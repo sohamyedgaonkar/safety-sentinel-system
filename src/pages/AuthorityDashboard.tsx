@@ -19,11 +19,13 @@ import { toast } from 'sonner';
 
 type Incident = {
   id: string;
-  reported_at: string;
+  reported_at: string | null;
   status: string;
   type: string;
   description: string;
-  user_id: string;
+  user_id: string | null;
+  location: string | null;
+  reporter_name: string | null;
 };
 
 const AuthorityDashboard = () => {
@@ -45,8 +47,9 @@ const AuthorityDashboard = () => {
       console.log('Fetching incidents...');
       const { data, error } = await supabase
         .from('incidents')
-        .select('*')
-        .order('reported_at', { ascending: false });
+        .select('*') // Ensure all fields are selected.
+        .order('reported_at', { ascending: false })
+        .limit(1000); // Ensure no rows are skipped by default limits.
 
       if (error) {
         console.error('Error fetching incidents:', error);
@@ -84,7 +87,7 @@ const AuthorityDashboard = () => {
       }
 
       toast.success('Incident status updated successfully');
-      fetchIncidents();
+      fetchIncidents(); // Refresh the incidents list after updating.
     } catch (error) {
       console.error('Error in updateIncidentStatus:', error);
       toast.error('An error occurred while updating the status');
@@ -128,7 +131,16 @@ const AuthorityDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-500">
-                    Reported on: {new Date(incident.reported_at).toLocaleDateString()}
+                    Reported on:{' '}
+                    {incident.reported_at
+                      ? new Date(incident.reported_at).toLocaleDateString()
+                      : 'Unknown'}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Location: {incident.location || 'N/A'}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Reporter: {incident.reporter_name || 'Anonymous'}
                   </p>
                   <p className="mt-4">{incident.description}</p>
                 </CardContent>
