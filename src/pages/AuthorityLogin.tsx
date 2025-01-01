@@ -10,57 +10,52 @@ const AuthorityLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, isAuthority } = useAuth();
+  const { signIn, getRole } = useAuth(); // Assuming `getRole` fetches the user's role
   const navigate = useNavigate();
 
-  const validateEmail = (email: string) => {
-    return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const validateInputs = () => {
+    if (!validateEmail(email)) {
+      toast.error('Please enter a valid email address');
+      return false;
+    }
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate email format
-    if (!validateEmail(email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
 
-    // Validate password length
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
-      return;
-    }
+    if (!validateInputs()) return;
 
     setIsLoading(true);
 
     try {
       await signIn(email, password);
-      
-      // Wait for role check to complete
-      const checkAuthorityAccess = async () => {
-        // Give some time for the auth state to update
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        if (isAuthority) {
-          toast.success('Signed in successfully');
-          navigate('/authority');
-        } else {
-          toast.error('This account does not have authority access');
-          signIn(email, password); // Re-authenticate as normal user
-          navigate('/login');
-        }
-      };
 
-      await checkAuthorityAccess();
+      // Check if the user has authority access
+      const role = await getRole();
+      if (role === 'authority') {
+        toast.success('Signed in successfully');
+        navigate('/authority');
+      } else {
+        toast.error('This account does not have authority access');
+        navigate('/login');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
-      
+
       // Handle specific error cases
       if (error.message?.includes('invalid_credentials')) {
         toast.error('Invalid email or password. Please check your credentials and try again.');
+      } else if (error.message?.includes('network_error')) {
+        toast.error('Network error. Please check your connection and try again.');
       } else {
-        toast.error('An error occurred while signing in. Please try again.');
+        toast.error('An unexpected error occurred. Please try again later.');
       }
     } finally {
       setIsLoading(false);
