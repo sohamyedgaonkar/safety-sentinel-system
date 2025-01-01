@@ -32,42 +32,43 @@ const AuthorityDashboard = () => {
   const { user, supabase, isAuthority } = useAuth();
   const navigate = useNavigate();
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!user || !isAuthority) {
       navigate('/authority-login');
-      return;
+    } else {
+      fetchIncidents();
     }
-
-    fetchIncidents();
   }, [user, isAuthority]);
 
   const fetchIncidents = async () => {
+    setLoading(true);
     try {
       console.log('Fetching incidents...');
       const { data, error } = await supabase
         .from('incidents')
-        .select('*')
-        .limit(1000); // Ensure no rows are skipped.
+        .select('*'); // Fetch all incidents without limit.
 
       if (error) {
         console.error('Error fetching incidents:', error);
         toast.error('Failed to fetch incidents');
-        return;
-      }
-
-      if (!data) {
-        console.log('No incidents found');
         setIncidents([]);
         return;
       }
 
-      console.log('Fetched incidents:', data);
-      console.log('Number of incidents:', data.length);
-      setIncidents(data);
+      if (!data || data.length === 0) {
+        console.log('No incidents found');
+        setIncidents([]);
+      } else {
+        console.log('Fetched incidents:', data);
+        setIncidents(data);
+      }
     } catch (error) {
       console.error('Error in fetchIncidents:', error);
       toast.error('An error occurred while fetching incidents');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,7 +102,9 @@ const AuthorityDashboard = () => {
         <div className="mb-4">
           <p className="text-gray-600">Total Incidents: {incidents.length}</p>
         </div>
-        {incidents.length === 0 ? (
+        {loading ? (
+          <p className="text-center text-gray-500">Loading incidents...</p>
+        ) : incidents.length === 0 ? (
           <p className="text-center text-gray-500">No incidents reported yet.</p>
         ) : (
           <div className="grid gap-6">
