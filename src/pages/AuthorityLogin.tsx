@@ -37,17 +37,22 @@ const AuthorityLogin = () => {
     try {
       await signIn(email, password);
       
-      // Wait a brief moment for isAuthority to update
-      setTimeout(() => {
+      // Wait for role check to complete
+      const checkAuthorityAccess = async () => {
+        // Give some time for the auth state to update
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         if (isAuthority) {
           toast.success('Signed in successfully');
           navigate('/authority');
         } else {
           toast.error('This account does not have authority access');
+          signIn(email, password); // Re-authenticate as normal user
           navigate('/login');
         }
-      }, 500);
-      
+      };
+
+      await checkAuthorityAccess();
     } catch (error: any) {
       console.error('Login error:', error);
       
