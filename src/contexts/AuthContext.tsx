@@ -66,13 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      const hasAuthorityRole = data?.role === 'authority';
-      setIsAuthority(hasAuthorityRole);
-
-      if (!hasAuthorityRole) {
-        toast.error('This account does not have authority access');
-        await supabaseClient.auth.signOut();
-      }
+      setIsAuthority(data?.role === 'authority');
     } catch (error) {
       console.error('Error in checkUserRole:', error);
       setIsAuthority(false);
