@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@supabase/supabase-js'; // Supabase client
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 
+const supabase = createClient(
+  'your-supabase-url', // Replace with your Supabase URL
+  'your-supabase-anon-key' // Replace with your Supabase anon key
+);
+
 const AuthorityLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, user, checkUserRole } = useAuth();
   const navigate = useNavigate();
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -35,39 +39,42 @@ const AuthorityLogin = () => {
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
-      
-      // Wait for user to be set after sign in
-      const checkAccess = async () => {
-        if (user?.id) {
-          const isAuthorityUser = await checkUserRole(user.id);
-          if (isAuthorityUser) {
-            toast.success('Signed in successfully');
-            navigate('/authority');
-          } else {
-            toast.error('This account does not have authority access');
-            navigate('/login');
-          }
-        }
-      };
+      // Step 1: Sign in the user
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Give some time for the auth state to update
-      setTimeout(async () => {
-        await checkAccess();
-        setIsLoading(false);
-      }, 1000);
+      if (signInError) {
+        throw new Error('Invalid email or password');
+      }
 
+      // Step 2: Fetch user role from `user_roles` table
+      const userId = signInData.user?.id;
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (roleError) {
+        throw new Error('Failed to fetch user role');
+      }
+
+      // Step 3: Check role and navigate accordingly
+      if (roleData.role === 'authority') {
+        toast.success('Signed in successfully');
+        navigate('/authority');
+      } else {
+        toast.error('This account does not have authority access');
+        // Optional: Sign the user out
+        await supabase.auth.signOut();
+      }
     } catch (error: any) {
       console.error('Login error:', error);
+      toast.error(error.message || 'An unexpected error occurred. Please try again later.');
+    } finally {
       setIsLoading(false);
-
-      if (error.message?.includes('invalid_credentials')) {
-        toast.error('Invalid email or password. Please check your credentials and try again.');
-      } else if (error.message?.includes('network_error')) {
-        toast.error('Network error. Please check your connection and try again.');
-      } else {
-        toast.error('An unexpected error occurred. Please try again later.');
-      }
     }
   };
 
