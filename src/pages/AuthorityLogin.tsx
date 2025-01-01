@@ -37,14 +37,17 @@ const AuthorityLogin = () => {
     try {
       await signIn(email, password);
       
-      // Check if the user is an authority after signing in
-      if (!isAuthority) {
-        toast.error('This account does not have authority access');
-        return;
-      }
+      // Wait a brief moment for isAuthority to update
+      setTimeout(() => {
+        if (isAuthority) {
+          toast.success('Signed in successfully');
+          navigate('/authority');
+        } else {
+          toast.error('This account does not have authority access');
+          navigate('/login');
+        }
+      }, 500);
       
-      toast.success('Signed in successfully');
-      navigate('/authority');
     } catch (error: any) {
       console.error('Login error:', error);
       
