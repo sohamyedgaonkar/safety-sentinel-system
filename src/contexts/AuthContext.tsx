@@ -8,6 +8,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   isAuthority: boolean;
+  checkUserRole: (userId: string) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkUserRole(supabaseClient, session.user.id);
+        checkUserRole(session.user.id);
       }
     });
 
@@ -43,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkUserRole(supabaseClient, session.user.id);
+        checkUserRole(session.user.id);
       } else {
         setIsAuthority(false);
       }
@@ -52,9 +53,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkUserRole = async (supabaseClient: SupabaseClient, userId: string) => {
+  const checkUserRole = async (userId: string) => {
+    if (!supabase) return false;
+
     try {
-      const { data, error } = await supabaseClient
+      console.log('Checking user role for:', userId);
+      const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
@@ -63,13 +67,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) {
         console.error('Error checking user role:', error);
         setIsAuthority(false);
-        return;
+        return false;
       }
 
-      setIsAuthority(data?.role === 'authority');
+      const hasAuthorityRole = data?.role === 'authority';
+      console.log('User authority status:', hasAuthorityRole);
+      setIsAuthority(hasAuthorityRole);
+      return hasAuthorityRole;
     } catch (error) {
       console.error('Error in checkUserRole:', error);
       setIsAuthority(false);
+      return false;
     }
   };
 
@@ -79,12 +87,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) throw error;
+    
+    if (data.user) {
+      await checkUserRole(data.user.id);
+    }
   };
 
   const signOut = async () => {
@@ -115,7 +127,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, supabase, signIn, signOut, isAuthority }}>
+    <AuthContext.Provider value={{ user, supabase, signIn, signOut, isAuthority, checkUserRole }}>
       {children}
     </AuthContext.Provider>
   );

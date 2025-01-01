@@ -10,7 +10,7 @@ const AuthorityLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, getRole } = useAuth(); // Assuming `getRole` fetches the user's role
+  const { signIn, user, checkUserRole } = useAuth();
   const navigate = useNavigate();
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -36,20 +36,31 @@ const AuthorityLogin = () => {
 
     try {
       await signIn(email, password);
+      
+      // Wait for user to be set after sign in
+      const checkAccess = async () => {
+        if (user?.id) {
+          const isAuthorityUser = await checkUserRole(user.id);
+          if (isAuthorityUser) {
+            toast.success('Signed in successfully');
+            navigate('/authority');
+          } else {
+            toast.error('This account does not have authority access');
+            navigate('/login');
+          }
+        }
+      };
 
-      // Immediately check the user's role after signing in
-      const role = await getRole();
-      if (role === 'authority') {
-        toast.success('Signed in successfully');
-        navigate('/authority');
-      } else {
-        toast.error('This account does not have authority access');
-        // Optional: Add logic to sign the user out if needed
-      }
+      // Give some time for the auth state to update
+      setTimeout(async () => {
+        await checkAccess();
+        setIsLoading(false);
+      }, 1000);
+
     } catch (error: any) {
       console.error('Login error:', error);
+      setIsLoading(false);
 
-      // Handle specific error cases
       if (error.message?.includes('invalid_credentials')) {
         toast.error('Invalid email or password. Please check your credentials and try again.');
       } else if (error.message?.includes('network_error')) {
@@ -57,8 +68,6 @@ const AuthorityLogin = () => {
       } else {
         toast.error('An unexpected error occurred. Please try again later.');
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
