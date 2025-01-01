@@ -37,14 +37,14 @@ const AuthorityLogin = () => {
     try {
       await signIn(email, password);
 
-      // Check if the user has authority access
+      // Immediately check the user's role after signing in
       const role = await getRole();
       if (role === 'authority') {
         toast.success('Signed in successfully');
         navigate('/authority');
       } else {
         toast.error('This account does not have authority access');
-        navigate('/login');
+        // Optional: Add logic to sign the user out if needed
       }
     } catch (error: any) {
       console.error('Login error:', error);
