@@ -26,14 +26,9 @@ const Header = () => {
                     Authority Dashboard
                   </Link>
                 ) : (
-                  <>
-                    <Link to="/dashboard" className="text-gray-600 hover:text-primary">
-                      My Applications
-                    </Link>
-                    <Link to="/apply" className="text-gray-600 hover:text-primary">
-                      Submit Application
-                    </Link>
-                  </>
+                  <Link to="/dashboard" className="text-gray-600 hover:text-primary">
+                    My Applications
+                  </Link>
                 )}
                 <Button
                   variant="outline"
