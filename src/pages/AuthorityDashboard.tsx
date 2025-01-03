@@ -15,6 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
 
 type Incident = {
@@ -33,6 +43,7 @@ const AuthorityDashboard = () => {
   const navigate = useNavigate();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{id: string, status: string} | null>(null);
 
   useEffect(() => {
     if (!user || !isAuthority) {
@@ -48,7 +59,7 @@ const AuthorityDashboard = () => {
       console.log('Fetching incidents...');
       const { data, error } = await supabase
         .from('incidents')
-        .select('*'); // Fetch all incidents without limit.
+        .select('*');
 
       if (error) {
         console.error('Error fetching incidents:', error);
@@ -87,10 +98,21 @@ const AuthorityDashboard = () => {
       }
 
       toast.success('Incident status updated successfully');
-      fetchIncidents(); // Refresh the incidents list after updating.
+      fetchIncidents();
     } catch (error) {
       console.error('Error in updateIncidentStatus:', error);
       toast.error('An error occurred while updating the status');
+    }
+  };
+
+  const handleStatusChange = (id: string, newStatus: string) => {
+    setPendingStatusChange({ id, status: newStatus });
+  };
+
+  const confirmStatusChange = () => {
+    if (pendingStatusChange) {
+      updateIncidentStatus(pendingStatusChange.id, pendingStatusChange.status);
+      setPendingStatusChange(null);
     }
   };
 
@@ -115,9 +137,7 @@ const AuthorityDashboard = () => {
                     <span>{incident.type}</span>
                     <Select
                       defaultValue={incident.status}
-                      onValueChange={(value) =>
-                        updateIncidentStatus(incident.id, value)
-                      }
+                      onValueChange={(value) => handleStatusChange(incident.id, value)}
                     >
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Update status" />
@@ -150,6 +170,26 @@ const AuthorityDashboard = () => {
             ))}
           </div>
         )}
+
+        <AlertDialog 
+          open={pendingStatusChange !== null}
+          onOpenChange={(open) => !open && setPendingStatusChange(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to change the status of this incident?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmStatusChange}>
+                Yes, change status
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
