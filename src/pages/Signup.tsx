@@ -4,39 +4,77 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const signupSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+  fullName: z.string().min(2, "Name must be at least 2 characters long"),
+  homeAddress: z.string().min(5, "Please enter a valid home address"),
+  workAddress: z.string().min(5, "Please enter a valid work address"),
+  mobileNumber: z.string().min(10, "Please enter a valid mobile number"),
+  emergencyContact: z.string().min(10, "Please enter a valid emergency contact number"),
+  age: z.number().min(18, "You must be at least 18 years old"),
+});
+
+type SignupForm = z.infer<typeof signupSchema>;
 
 const Signup = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { supabase } = useAuth();
   const navigate = useNavigate();
 
-  const validateEmail = (email: string) => {
-    return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-  };
+  const form = useForm<SignupForm>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      fullName: "",
+      homeAddress: "",
+      workAddress: "",
+      mobileNumber: "",
+      emergencyContact: "",
+      age: 18,
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateEmail(email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
-      return;
-    }
-
+  const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
+      // Sign up the user
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+
+      if (authData.user) {
+        // Store additional user details
+        const { error: detailsError } = await supabase
+          .from('user_details')
+          .insert({
+            id: authData.user.id,
+            full_name: data.fullName,
+            home_address: data.homeAddress,
+            work_address: data.workAddress,
+            mobile_number: data.mobileNumber,
+            emergency_contact: data.emergencyContact,
+            age: data.age,
+          });
+
+        if (detailsError) throw detailsError;
+      }
 
       toast.success('Signup successful! Please check your email to verify your account.');
       navigate('/login');
@@ -66,39 +104,128 @@ const Signup = () => {
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <Input
-                id="email"
-                type="email"
-                required
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-6">
+            <div className="rounded-md shadow-sm space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email address</FormLabel>
+                    <FormControl>
+                      <Input type="email" {...field} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <Input
-                id="password"
-                type="password"
-                required
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
 
-          <div>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="homeAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Home Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="workAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Work Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="mobileNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mobile Number</FormLabel>
+                    <FormControl>
+                      <Input type="tel" {...field} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="emergencyContact"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Emergency Contact Number</FormLabel>
+                    <FormControl>
+                      <Input type="tel" {...field} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Age</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        disabled={isLoading} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <Button 
               type="submit" 
               className="w-full" 
@@ -106,8 +233,8 @@ const Signup = () => {
             >
               {isLoading ? 'Creating account...' : 'Create account'}
             </Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </div>
     </div>
   );
