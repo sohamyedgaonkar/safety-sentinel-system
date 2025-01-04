@@ -29,22 +29,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-    setSupabase(supabaseClient);
-
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkUserRole(session.user.id);
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
       }
     });
+    setSupabase(supabaseClient);
+
+    // Initialize auth state
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          if (sessionError.message.includes('refresh_token_not_found')) {
+            await supabaseClient.auth.signOut();
+            setUser(null);
+            setIsAuthority(false);
+            toast.error('Your session has expired. Please sign in again.');
+          }
+          return;
+        }
+
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await checkUserRole(session.user.id);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        toast.error('There was a problem initializing authentication.');
+      }
+    };
+
+    initializeAuth();
 
     const {
       data: { subscription },
-    } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+    } = supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+      console.log('Auth state changed:', _event, session?.user?.id);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkUserRole(session.user.id);
+        await checkUserRole(session.user.id);
       } else {
         setIsAuthority(false);
       }
@@ -87,15 +115,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    const { error, data } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) throw error;
-    
-    if (data.user) {
-      await checkUserRole(data.user.id);
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+      
+      if (data.user) {
+        await checkUserRole(data.user.id);
+      }
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      throw error;
     }
   };
 
@@ -104,9 +140,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       toast.error('Supabase client not initialized');
       return;
     }
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    setIsAuthority(false);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setIsAuthority(false);
+      setUser(null);
+    } catch (error) {
+      console.error('Sign out error:', error);
+      throw error;
+    }
   };
 
   if (!supabase) {
