@@ -21,6 +21,7 @@ type Incident = {
   type: string;
   description: string;
   location: string | null;
+  log: string | null;  // Added this line to match the IncidentCard props type
 };
 
 const Dashboard = () => {
@@ -42,7 +43,7 @@ const Dashboard = () => {
     const fetchIncidents = async () => {
       const { data, error } = await supabase
         .from('incidents')
-        .select('id, reported_at, type, description, status, location')
+        .select('id, reported_at, type, description, status, location, log')  // Added log to the select query
         .eq('user_id', user.id);
 
       if (error) {
