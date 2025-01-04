@@ -4,10 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   ChartContainer,
@@ -15,7 +11,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import Map from '@/components/Map';
+import IncidentCard from '@/components/IncidentCard';
+import EditIncidentDialog from '@/components/EditIncidentDialog';
 
 type Incident = {
   id: string;
@@ -86,6 +83,7 @@ const Dashboard = () => {
       .update({
         description: editDescription.trim(),
         location: editLocation.trim() || null,
+        status: 'pending', // Set status to pending when user edits
       })
       .eq('id', editingIncident.id)
       .eq('user_id', user?.id);
@@ -99,7 +97,12 @@ const Dashboard = () => {
     // Update local state
     setIncidents(incidents.map(incident => 
       incident.id === editingIncident.id 
-        ? { ...incident, description: editDescription, location: editLocation }
+        ? { 
+            ...incident, 
+            description: editDescription, 
+            location: editLocation,
+            status: 'pending' // Update local state status as well
+          }
         : incident
     ));
 
@@ -125,13 +128,7 @@ const Dashboard = () => {
                 <CardTitle>Incident Statistics</CardTitle>
               </CardHeader>
               <CardContent className="h-[300px]">
-                <ChartContainer
-                  config={{
-                    incidents: {
-                      color: "hsl(var(--primary))",
-                    },
-                  }}
-                >
+                <ChartContainer>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={statistics}>
                       <XAxis dataKey="name" />
@@ -148,75 +145,25 @@ const Dashboard = () => {
           <TabsContent value="incidents" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {incidents.map((incident) => (
-                <Card key={incident.id}>
-                  <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
-                      <span>{incident.type}</span>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEdit(incident)}
-                      >
-                        Edit
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-500">
-                      Status: {incident.status}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Date: {new Date(incident.reported_at).toLocaleDateString()}
-                    </p>
-                    <p className="mt-2">{incident.description}</p>
-                    {incident.location && (
-                      <p className="text-sm text-gray-500 mt-2">
-                        Location: {incident.location}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                <IncidentCard
+                  key={incident.id}
+                  incident={incident}
+                  onEdit={handleEdit}
+                />
               ))}
             </div>
           </TabsContent>
         </Tabs>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Edit Incident Report</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Description</label>
-                <Textarea
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  placeholder="Update incident description..."
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Location (Optional)</label>
-                <div className="h-[200px] rounded-md overflow-hidden mb-2">
-                  <Map onLocationSelect={(loc) => setEditLocation(loc)} />
-                </div>
-                <Input
-                  value={editLocation}
-                  onChange={(e) => setEditLocation(e.target.value)}
-                  placeholder="Update location..."
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSave}>
-                  Save Changes
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <EditIncidentDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          description={editDescription}
+          setDescription={setEditDescription}
+          location={editLocation}
+          setLocation={setEditLocation}
+          onSave={handleSave}
+        />
       </main>
     </div>
   );
