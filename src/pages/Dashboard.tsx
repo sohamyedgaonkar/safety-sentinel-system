@@ -78,12 +78,41 @@ const Dashboard = () => {
   const handleSave = async () => {
     if (!editingIncident) return;
 
+    // First get the current incident to access its log
+    const { data: currentIncident, error: fetchError } = await supabase
+      .from('incidents')
+      .select('log')
+      .eq('id', editingIncident.id)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching incident:', fetchError);
+      toast.error('Failed to update incident');
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const changes = [];
+    
+    if (editingIncident.description !== editDescription) {
+      changes.push('description');
+    }
+    if (editingIncident.location !== editLocation) {
+      changes.push('location');
+    }
+
+    const newLogEntry = `[${timestamp}] User edited ${changes.join(' and ')}. Status set to pending\n`;
+    const updatedLog = currentIncident.log 
+      ? `${currentIncident.log}${newLogEntry}`
+      : newLogEntry;
+
     const { error } = await supabase
       .from('incidents')
       .update({
         description: editDescription.trim(),
         location: editLocation.trim() || null,
-        status: 'pending', // Set status to pending when user edits
+        status: 'pending',
+        log: updatedLog
       })
       .eq('id', editingIncident.id)
       .eq('user_id', user?.id);
@@ -101,7 +130,8 @@ const Dashboard = () => {
             ...incident, 
             description: editDescription, 
             location: editLocation,
-            status: 'pending' // Update local state status as well
+            status: 'pending',
+            log: updatedLog
           }
         : incident
     ));

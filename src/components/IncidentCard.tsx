@@ -9,6 +9,7 @@ type IncidentCardProps = {
     reported_at: string;
     description: string;
     location: string | null;
+    log: string | null;
   };
   onEdit: (incident: any) => void;
 };

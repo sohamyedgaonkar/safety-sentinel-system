@@ -52,6 +52,7 @@ export type Database = {
           id: string
           is_anonymous: boolean | null
           location: string | null
+          log: string | null
           reported_at: string | null
           reporter_name: string | null
           status: string | null
@@ -67,6 +68,7 @@ export type Database = {
           id?: string
           is_anonymous?: boolean | null
           location?: string | null
+          log?: string | null
           reported_at?: string | null
           reporter_name?: string | null
           status?: string | null
@@ -82,6 +84,7 @@ export type Database = {
           id?: string
           is_anonymous?: boolean | null
           location?: string | null
+          log?: string | null
           reported_at?: string | null
           reporter_name?: string | null
           status?: string | null

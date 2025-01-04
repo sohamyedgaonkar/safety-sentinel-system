@@ -86,9 +86,32 @@ const AuthorityDashboard = () => {
   const updateIncidentStatus = async (id: string, newStatus: string) => {
     try {
       console.log('Updating incident status:', { id, newStatus });
+      
+      // First get the current incident to access its log
+      const { data: currentIncident, error: fetchError } = await supabase
+        .from('incidents')
+        .select('log')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching incident:', fetchError);
+        toast.error('Failed to update incident status');
+        return;
+      }
+
+      const timestamp = new Date().toISOString();
+      const newLogEntry = `[${timestamp}] Status changed to "${newStatus}" by authority\n`;
+      const updatedLog = currentIncident.log 
+        ? `${currentIncident.log}${newLogEntry}`
+        : newLogEntry;
+
       const { error } = await supabase
         .from('incidents')
-        .update({ status: newStatus })
+        .update({ 
+          status: newStatus,
+          log: updatedLog
+        })
         .eq('id', id);
 
       if (error) {
