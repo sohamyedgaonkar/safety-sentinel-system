@@ -128,12 +128,21 @@ const Dashboard = () => {
                 <CardTitle>Incident Statistics</CardTitle>
               </CardHeader>
               <CardContent className="h-[300px]">
-                <ChartContainer>
+                <ChartContainer
+                  config={{
+                    value: {
+                      theme: {
+                        light: "#2563eb",
+                        dark: "#3b82f6"
+                      }
+                    }
+                  }}
+                >
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={statistics}>
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Bar dataKey="value" fill="currentColor" />
+                      <Bar dataKey="value" fill="var(--color-value)" />
                       <Tooltip content={<ChartTooltipContent />} />
                     </BarChart>
                   </ResponsiveContainer>
