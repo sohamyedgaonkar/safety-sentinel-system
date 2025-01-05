@@ -2,19 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import AuthorityIncidentList from '@/components/AuthorityIncidentList';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +24,7 @@ type Incident = {
   user_id: string | null;
   location: string | null;
   reporter_name: string | null;
+  log: string | null;
 };
 
 const AuthorityDashboard = () => {
@@ -152,46 +141,10 @@ const AuthorityDashboard = () => {
         ) : incidents.length === 0 ? (
           <p className="text-center text-gray-500">No incidents reported yet.</p>
         ) : (
-          <div className="grid gap-6">
-            {incidents.map((incident) => (
-              <Card key={incident.id}>
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>{incident.type}</span>
-                    <Select
-                      defaultValue={incident.status}
-                      onValueChange={(value) => handleStatusChange(incident.id, value)}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Update status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="in_review">In Review</SelectItem>
-                        <SelectItem value="resolved">Resolved</SelectItem>
-                        <SelectItem value="closed">Closed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">
-                    Reported on:{' '}
-                    {incident.reported_at
-                      ? new Date(incident.reported_at).toLocaleDateString()
-                      : 'Unknown'}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Location: {incident.location || 'N/A'}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Reporter: {incident.reporter_name || 'Anonymous'}
-                  </p>
-                  <p className="mt-4">{incident.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <AuthorityIncidentList 
+            incidents={incidents}
+            onStatusChange={handleStatusChange}
+          />
         )}
 
         <AlertDialog 
