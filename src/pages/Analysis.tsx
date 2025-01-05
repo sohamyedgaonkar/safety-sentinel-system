@@ -4,8 +4,6 @@ import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import Map from "@/components/Map";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 
 type IncidentData = {
   category: string;
@@ -73,59 +71,53 @@ const Analysis = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <main className="flex-1">
-          <div className="container mx-auto py-8 space-y-8">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-primary mb-6">Incident Analysis</h1>
-              <SidebarTrigger />
+    <main className="flex-1">
+      <div className="container mx-auto py-8 space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-primary mb-6">Incident Analysis</h1>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Incidents by Category</h2>
+            <div className="h-[300px]">
+              <ChartContainer
+                config={{
+                  category: { theme: { light: "#2563eb", dark: "#3b82f6" } },
+                }}
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={incidentData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="category" />
+                    <YAxis />
+                    <ChartTooltip />
+                    <Bar dataKey="count" name="Number of Incidents" fill="var(--color-category)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             </div>
-            
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Incidents by Category</h2>
-                <div className="h-[300px]">
-                  <ChartContainer
-                    config={{
-                      category: { theme: { light: "#2563eb", dark: "#3b82f6" } },
-                    }}
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={incidentData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="category" />
-                        <YAxis />
-                        <ChartTooltip />
-                        <Bar dataKey="count" name="Number of Incidents" fill="var(--color-category)" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </div>
-              </Card>
+          </Card>
 
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Location Heat Map</h2>
-                <div className="h-[300px]">
-                  <Map />
-                </div>
-              </Card>
-
-              <Card className="p-6 md:col-span-2">
-                <h2 className="text-xl font-semibold mb-4">Key Insights</h2>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li>• Most incidents are reported in {incidentData[0]?.location || 'loading...'}</li>
-                  <li>• {incidentData[0]?.category || 'Incident'} reports are highest ({incidentData[0]?.count || 0} reports)</li>
-                  <li>• Total number of reported incidents: {incidentData.reduce((sum, item) => sum + item.count, 0)}</li>
-                  <li>• {incidentData.length} different types of incidents reported</li>
-                </ul>
-              </Card>
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Location Heat Map</h2>
+            <div className="h-[300px]">
+              <Map />
             </div>
-          </div>
-        </main>
+          </Card>
+
+          <Card className="p-6 md:col-span-2">
+            <h2 className="text-xl font-semibold mb-4">Key Insights</h2>
+            <ul className="space-y-2 text-muted-foreground">
+              <li>• Most incidents are reported in {incidentData[0]?.location || 'loading...'}</li>
+              <li>• {incidentData[0]?.category || 'Incident'} reports are highest ({incidentData[0]?.count || 0} reports)</li>
+              <li>• Total number of reported incidents: {incidentData.reduce((sum, item) => sum + item.count, 0)}</li>
+              <li>• {incidentData.length} different types of incidents reported</li>
+            </ul>
+          </Card>
+        </div>
       </div>
-    </SidebarProvider>
+    </main>
   );
 };
 
