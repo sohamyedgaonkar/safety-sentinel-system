@@ -1,19 +1,75 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import Map from "@/components/Map";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock data - replace with real data when connected to backend
-const mockIncidentData = [
-  { category: "Harassment", count: 12, location: "Downtown" },
-  { category: "Stalking", count: 8, location: "Suburbs" },
-  { category: "Suspicious Activity", count: 15, location: "City Center" },
-  { category: "Unsafe Environment", count: 10, location: "Industrial Area" },
-  { category: "Other", count: 5, location: "Residential" },
-];
+type IncidentData = {
+  category: string;
+  count: number;
+  location: string;
+};
 
 const Analysis = () => {
+  const [incidentData, setIncidentData] = useState<IncidentData[]>([]);
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchIncidentData();
+  }, []);
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'incidents'
+        },
+        () => {
+          // Refetch data when any change occurs
+          fetchIncidentData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchIncidentData = async () => {
+    try {
+      const { data: incidents } = await supabase
+        .from('incidents')
+        .select('type, location');
+
+      if (incidents) {
+        // Process incidents data for visualization
+        const categoryCounts = incidents.reduce((acc: { [key: string]: any }, incident) => {
+          const category = incident.type;
+          if (!acc[category]) {
+            acc[category] = {
+              category,
+              count: 0,
+              location: incident.location
+            };
+          }
+          acc[category].count += 1;
+          return acc;
+        }, {});
+
+        setIncidentData(Object.values(categoryCounts));
+      }
+    } catch (error) {
+      console.error('Error fetching incident data:', error);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 space-y-8">
       <h1 className="text-3xl font-bold text-primary mb-6">Incident Analysis</h1>
@@ -28,7 +84,7 @@ const Analysis = () => {
               }}
             >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={mockIncidentData}>
+                <BarChart data={incidentData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="category" />
                   <YAxis />
@@ -50,10 +106,10 @@ const Analysis = () => {
         <Card className="p-6 md:col-span-2">
           <h2 className="text-xl font-semibold mb-4">Key Insights</h2>
           <ul className="space-y-2 text-muted-foreground">
-            <li>• Most incidents are reported in the City Center area</li>
-            <li>• Harassment reports are highest during evening hours</li>
-            <li>• Suspicious activity reports have increased by 20% this month</li>
-            <li>• Downtown area shows the highest concentration of incidents</li>
+            <li>• Most incidents are reported in {incidentData[0]?.location || 'loading...'}</li>
+            <li>• {incidentData[0]?.category || 'Incident'} reports are highest ({incidentData[0]?.count || 0} reports)</li>
+            <li>• Total number of reported incidents: {incidentData.reduce((sum, item) => sum + item.count, 0)}</li>
+            <li>• {incidentData.length} different types of incidents reported</li>
           </ul>
         </Card>
       </div>
