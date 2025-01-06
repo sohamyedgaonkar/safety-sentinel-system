@@ -2,14 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import Map from "./Map";
+import ChatWithRachael from "./ChatWithRachael";
+import IncidentTypeSelector from "./IncidentTypeSelector";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/gif", "video/mp4"];
 
 const incidentTypes = [
@@ -29,6 +30,7 @@ const IncidentForm = () => {
   const [location, setLocation] = useState("");
   const [evidence, setEvidence] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showChat, setShowChat] = useState(true);
 
   const validateForm = () => {
     if (!user) {
@@ -67,18 +69,15 @@ const IncidentForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
 
     setIsSubmitting(true);
     try {
-      // Handle the file upload if provided
       let evidencePath = null;
       if (evidence) {
         const fileExt = evidence.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         
-        // First, check if the bucket exists and is accessible
         const { data: bucketData, error: bucketError } = await supabase
           .storage
           .getBucket('evidence');
@@ -88,7 +87,6 @@ const IncidentForm = () => {
           throw new Error("Unable to access storage. Please try again later.");
         }
 
-        // Attempt to upload with proper error handling
         const { data: fileData, error: uploadError } = await supabase.storage
           .from('evidence')
           .upload(`${user?.id}/${fileName}`, evidence, {
@@ -106,7 +104,6 @@ const IncidentForm = () => {
         evidencePath = fileData?.path || null;
       }
 
-      // Insert the incident record
       const { error: insertError } = await supabase
         .from('incidents')
         .insert([
@@ -114,7 +111,7 @@ const IncidentForm = () => {
             user_id: user?.id,
             type: selectedType,
             description: description.trim(),
-            location: location.trim() || null, // Allow null location
+            location: location.trim() || null,
             evidence_file: evidencePath,
             status: "pending",
             reported_at: new Date().toISOString(),
@@ -137,36 +134,18 @@ const IncidentForm = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (validateFile(file)) {
-        setEvidence(file);
-      } else {
-        e.target.value = ''; // Reset input
-        setEvidence(null);
-      }
-    }
+  const handleChatComplete = (chatDescription: string) => {
+    setDescription(chatDescription);
+    setShowChat(false);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-sm">
-      <div className="space-y-2">
-        <Label>Type of Incident</Label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {incidentTypes.map((type) => (
-            <Button
-              key={type}
-              type="button"
-              variant={selectedType === type ? "default" : "outline"}
-              onClick={() => setSelectedType(type)}
-              className="justify-start"
-            >
-              {type}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <IncidentTypeSelector
+        selectedType={selectedType}
+        onTypeSelect={setSelectedType}
+        incidentTypes={incidentTypes}
+      />
 
       <div className="space-y-2">
         <Label>Location (Optional)</Label>
@@ -175,23 +154,41 @@ const IncidentForm = () => {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Description</Label>
-        <Textarea
-          placeholder="Please describe what happened..."
-          className="min-h-[100px]"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-      </div>
+      {showChat ? (
+        <ChatWithRachael onComplete={handleChatComplete} />
+      ) : (
+        <div className="space-y-2">
+          <Label>Description</Label>
+          <textarea
+            className="w-full min-h-[100px] p-2 border rounded"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            readOnly
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowChat(true)}
+          >
+            Chat with Rachael again
+          </Button>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>Evidence (Optional)</Label>
         <Input 
           type="file" 
           accept={ALLOWED_FILE_TYPES.join(',')}
-          onChange={handleFileChange}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && validateFile(file)) {
+              setEvidence(file);
+            } else {
+              e.target.value = '';
+              setEvidence(null);
+            }
+          }}
           className="cursor-pointer"
         />
         <p className="text-xs text-gray-500">Maximum file size: 5MB. Supported formats: JPG, PNG, GIF, MP4</p>
