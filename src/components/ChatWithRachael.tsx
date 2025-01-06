@@ -18,7 +18,6 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [questionCount, setQuestionCount] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -53,12 +52,9 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
       
       const newMessages = [...updatedMessages, assistantMessage];
       setMessages(newMessages);
-      
-      const newQuestionCount = questionCount + 1;
-      setQuestionCount(newQuestionCount);
 
-      // If we've reached 3 questions or the AI provides a summary
-      if (newQuestionCount >= 3 || assistantMessage.content.toLowerCase().includes("summary")) {
+      // If the AI provides a summary, complete the chat
+      if (assistantMessage.content.toLowerCase().includes("summary")) {
         setIsCompleted(true);
         // Generate final description from chat history
         const description = newMessages
