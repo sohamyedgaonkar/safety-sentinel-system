@@ -28,11 +28,13 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
     const currentInput = userInput;
     setUserInput("");
 
-    // Add user message to chat
-    const updatedMessages = [
-      ...messages,
-      { role: "user", content: currentInput }
-    ];
+    // Add user message to chat with explicit type
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: currentInput
+    };
+    
+    const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
 
     try {
@@ -42,7 +44,12 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
 
       if (error) throw error;
 
-      const assistantMessage = data.choices[0].message;
+      // Ensure the assistant message matches the ChatMessage type
+      const assistantMessage: ChatMessage = {
+        role: "assistant",
+        content: data.choices[0].message.content
+      };
+      
       const newMessages = [...updatedMessages, assistantMessage];
       setMessages(newMessages);
       setQuestionCount(prev => prev + 1);
