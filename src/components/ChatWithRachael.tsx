@@ -19,18 +19,18 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
   const [userInput, setUserInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent form submission from bubbling up
+    e.stopPropagation();
     
-    if (!userInput.trim() || isLoading) return;
+    if (!userInput.trim() || isLoading || isCompleted) return;
 
     setIsLoading(true);
     const currentInput = userInput;
     setUserInput("");
 
-    // Add user message to chat with explicit type
     const userMessage: ChatMessage = {
       role: "user",
       content: currentInput
@@ -46,7 +46,6 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
 
       if (error) throw error;
 
-      // Ensure the assistant message matches the ChatMessage type
       const assistantMessage: ChatMessage = {
         role: "assistant",
         content: data.choices[0].message.content
@@ -54,10 +53,13 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
       
       const newMessages = [...updatedMessages, assistantMessage];
       setMessages(newMessages);
-      setQuestionCount(prev => prev + 1);
+      
+      const newQuestionCount = questionCount + 1;
+      setQuestionCount(newQuestionCount);
 
       // If we've reached 3 questions or the AI provides a summary
-      if (questionCount >= 2 || assistantMessage.content.toLowerCase().includes("summary")) {
+      if (newQuestionCount >= 3 || assistantMessage.content.toLowerCase().includes("summary")) {
+        setIsCompleted(true);
         // Generate final description from chat history
         const description = newMessages
           .filter(m => m.role !== "system")
@@ -105,9 +107,9 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           placeholder="Type your response..."
-          disabled={isLoading || questionCount >= 3}
+          disabled={isLoading || isCompleted}
         />
-        <Button type="submit" disabled={isLoading || questionCount >= 3}>
+        <Button type="submit" disabled={isLoading || isCompleted}>
           {isLoading ? "Sending..." : "Send"}
         </Button>
       </form>

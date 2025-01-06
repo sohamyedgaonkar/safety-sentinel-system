@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ChatWithRachael from "@/components/ChatWithRachael";
 import { Button } from "@/components/ui/button";
@@ -7,8 +6,8 @@ const ChatWithRachaelPage = () => {
   const navigate = useNavigate();
 
   const handleChatComplete = (description: string) => {
-    // Store the description in localStorage temporarily
-    localStorage.setItem("incident_description", description);
+    // Store the description in localStorage
+    localStorage.setItem("incidentDescription", description);
     navigate("/");
   };
 
