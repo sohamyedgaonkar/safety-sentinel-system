@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle(); // Changed from .single() to .maybeSingle()
 
       if (error) {
         console.error('Error checking user role:', error);
@@ -98,7 +98,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return false;
       }
 
-      const hasAuthorityRole = data?.role === 'authority';
+      // If no role found, default to non-authority
+      if (!data) {
+        console.log('No role found for user, defaulting to non-authority');
+        setIsAuthority(false);
+        return false;
+      }
+
+      const hasAuthorityRole = data.role === 'authority';
       console.log('User authority status:', hasAuthorityRole);
       setIsAuthority(hasAuthorityRole);
       return hasAuthorityRole;
