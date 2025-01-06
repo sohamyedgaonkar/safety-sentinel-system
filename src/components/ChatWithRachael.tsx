@@ -20,6 +20,21 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
 
+  const generateDescription = () => {
+    if (messages.length === 0) {
+      toast.error("Please have a conversation first before generating a description.");
+      return;
+    }
+
+    const description = messages
+      .filter(m => m.role !== "system")
+      .map(m => `${m.role === "user" ? "User" : "Rachael"}: ${m.content}`)
+      .join("\n\n");
+    
+    setIsCompleted(true);
+    onComplete(description);
+  };
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -98,17 +113,28 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
         )}
       </div>
 
-      <form onSubmit={sendMessage} className="flex gap-2">
-        <Input
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          placeholder="Type your response..."
-          disabled={isLoading || isCompleted}
-        />
-        <Button type="submit" disabled={isLoading || isCompleted}>
-          {isLoading ? "Sending..." : "Send"}
+      <div className="space-y-2">
+        <form onSubmit={sendMessage} className="flex gap-2">
+          <Input
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            placeholder="Type your response..."
+            disabled={isLoading || isCompleted}
+          />
+          <Button type="submit" disabled={isLoading || isCompleted}>
+            {isLoading ? "Sending..." : "Send"}
+          </Button>
+        </form>
+
+        <Button 
+          onClick={generateDescription} 
+          disabled={isCompleted || messages.length === 0}
+          variant="secondary"
+          className="w-full"
+        >
+          Generate Description
         </Button>
-      </form>
+      </div>
     </div>
   );
 };
