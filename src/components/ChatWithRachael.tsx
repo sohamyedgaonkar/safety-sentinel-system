@@ -22,6 +22,8 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent form submission from bubbling up
+    
     if (!userInput.trim() || isLoading) return;
 
     setIsLoading(true);

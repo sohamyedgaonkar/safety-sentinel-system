@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import ApplicantForm from "./pages/ApplicantForm";
 import AuthorityDashboard from "./pages/AuthorityDashboard";
 import AuthorityLogin from "./pages/AuthorityLogin";
+import ChatWithRachaelPage from "./pages/ChatWithRachaelPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/apply" element={<ApplicantForm />} />
             <Route path="/authority" element={<AuthorityDashboard />} />
             <Route path="/authority-login" element={<AuthorityLogin />} />
+            <Route path="/chat-with-rachael" element={<ChatWithRachaelPage />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

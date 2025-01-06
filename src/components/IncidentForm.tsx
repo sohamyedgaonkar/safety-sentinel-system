@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import Map from "./Map";
-import ChatWithRachael from "./ChatWithRachael";
 import IncidentTypeSelector from "./IncidentTypeSelector";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -30,7 +29,15 @@ const IncidentForm = () => {
   const [location, setLocation] = useState("");
   const [evidence, setEvidence] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showChat, setShowChat] = useState(true);
+
+  // Check for description from ChatWithRachael when component mounts
+  useEffect(() => {
+    const savedDescription = localStorage.getItem("incidentDescription");
+    if (savedDescription) {
+      setDescription(savedDescription);
+      localStorage.removeItem("incidentDescription"); // Clear after using
+    }
+  }, []);
 
   const validateForm = () => {
     if (!user) {
@@ -49,7 +56,6 @@ const IncidentForm = () => {
       return false;
     }
 
-    // Removed location validation since it's now optional
     return true;
   };
 
@@ -78,30 +84,12 @@ const IncidentForm = () => {
         const fileExt = evidence.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         
-        const { data: bucketData, error: bucketError } = await supabase
-          .storage
-          .getBucket('evidence');
-
-        if (bucketError) {
-          console.error("Bucket access error:", bucketError);
-          throw new Error("Unable to access storage. Please try again later.");
-        }
-
-        const { data: fileData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('evidence')
-          .upload(`${user?.id}/${fileName}`, evidence, {
-            cacheControl: '3600',
-            upsert: false
-          });
+          .upload(`${user?.id}/${fileName}`, evidence);
 
-        if (uploadError) {
-          console.error("File upload error:", uploadError);
-          if (uploadError.message.includes("security policy")) {
-            throw new Error("Permission denied. Please ensure you're logged in.");
-          }
-          throw new Error(`Error uploading evidence: ${uploadError.message}`);
-        }
-        evidencePath = fileData?.path || null;
+        if (uploadError) throw uploadError;
+        evidencePath = `${user?.id}/${fileName}`;
       }
 
       const { error: insertError } = await supabase
@@ -119,10 +107,7 @@ const IncidentForm = () => {
           },
         ]);
 
-      if (insertError) {
-        console.error("Database insert error:", insertError);
-        throw insertError;
-      }
+      if (insertError) throw insertError;
 
       toast.success("Incident reported successfully");
       navigate("/dashboard");
@@ -132,11 +117,6 @@ const IncidentForm = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleChatComplete = (chatDescription: string) => {
-    setDescription(chatDescription);
-    setShowChat(false);
   };
 
   return (
@@ -154,26 +134,24 @@ const IncidentForm = () => {
         </div>
       </div>
 
-      {showChat ? (
-        <ChatWithRachael onComplete={handleChatComplete} />
-      ) : (
-        <div className="space-y-2">
-          <Label>Description</Label>
+      <div className="space-y-2">
+        <Label>Description</Label>
+        <div className="space-y-4">
+          <Button
+            type="button"
+            onClick={() => navigate("/chat-with-rachael")}
+            className="w-full"
+          >
+            Chat with Rachael to Describe the Incident
+          </Button>
           <textarea
             className="w-full min-h-[100px] p-2 border rounded"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            readOnly
+            placeholder="Describe the incident here or use the chat above..."
           />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowChat(true)}
-          >
-            Chat with Rachael again
-          </Button>
         </div>
-      )}
+      </div>
 
       <div className="space-y-2">
         <Label>Evidence (Optional)</Label>
