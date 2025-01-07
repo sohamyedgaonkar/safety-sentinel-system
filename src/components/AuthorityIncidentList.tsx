@@ -41,18 +41,18 @@ const AuthorityIncidentList = ({ incidents, onStatusChange }: AuthorityIncidentL
 
   const handleViewEvidence = async (evidenceFile: string) => {
     try {
-      const { data: { publicUrl }, error } = await supabase
+      const { data } = await supabase
         .storage
         .from('evidence')
         .getPublicUrl(evidenceFile);
 
-      if (error) {
-        console.error('Error getting evidence URL:', error);
+      if (!data) {
+        console.error('Error getting evidence URL: No data returned');
         return;
       }
 
-      setEvidenceUrl(publicUrl);
-      window.open(publicUrl, '_blank');
+      setEvidenceUrl(data.publicUrl);
+      window.open(data.publicUrl, '_blank');
     } catch (error) {
       console.error('Error viewing evidence:', error);
     }

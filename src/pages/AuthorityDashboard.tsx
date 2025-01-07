@@ -25,6 +25,7 @@ type Incident = {
   location: string | null;
   reporter_name: string | null;
   log: string | null;
+  evidence_file: string | null;
 };
 
 const AuthorityDashboard = () => {
