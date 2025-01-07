@@ -20,19 +20,34 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  const generateDescription = () => {
+  const generateDescription = async () => {
     if (messages.length === 0) {
       toast.error("Please have a conversation first before generating a description.");
       return;
     }
 
-    const description = messages
-      .filter(m => m.role !== "system")
-      .map(m => `${m.role === "user" ? "User" : "Rachael"}: ${m.content}`)
-      .join("\n\n");
-    
-    setIsCompleted(true);
-    onComplete(description);
+    setIsLoading(true);
+    try {
+      // Send the chat history to get a summary
+      const { data, error } = await supabase.functions.invoke('chat-with-rachael', {
+        body: { 
+          message: "Please provide a professional summary of this incident based on our conversation.",
+          history: messages,
+          isSummaryRequest: true // Flag to indicate we want a summary
+        }
+      });
+
+      if (error) throw error;
+
+      const summary = data.choices[0].message.content;
+      setIsCompleted(true);
+      onComplete(summary);
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      toast.error("Failed to generate summary. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -65,19 +80,7 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
         content: data.choices[0].message.content
       };
       
-      const newMessages = [...updatedMessages, assistantMessage];
-      setMessages(newMessages);
-
-      // If the AI provides a summary, complete the chat
-      if (assistantMessage.content.toLowerCase().includes("summary")) {
-        setIsCompleted(true);
-        // Generate final description from chat history
-        const description = newMessages
-          .filter(m => m.role !== "system")
-          .map(m => `${m.role === "user" ? "User" : "Rachael"}: ${m.content}`)
-          .join("\n\n");
-        onComplete(description);
-      }
+      setMessages([...updatedMessages, assistantMessage]);
     } catch (error) {
       console.error('Error in chat:', error);
       toast.error("Failed to get response from Rachael. Please try again.");
@@ -128,11 +131,11 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
 
         <Button 
           onClick={generateDescription} 
-          disabled={isCompleted || messages.length === 0}
+          disabled={isCompleted || messages.length === 0 || isLoading}
           variant="secondary"
           className="w-full"
         >
-          Generate Description
+          {isLoading ? "Generating Summary..." : "Generate Description"}
         </Button>
       </div>
     </div>

@@ -19,14 +19,20 @@ serve(async (req) => {
   }
 
   try {
-    const { message, history } = await req.json();
+    const { message, history, isSummaryRequest } = await req.json();
     
+    // Different system message based on whether this is a summary request
+    const systemMessage = isSummaryRequest ? {
+      role: "system",
+      content: "You are a professional incident report writer. Based on the conversation history provided, create a clear, concise, and professional summary of the incident. Focus on key details, timeline, and relevant information. Do not include the conversation format in your summary."
+    } : {
+      role: "system",
+      content: "You are Rachael, a compassionate women's safety officer. Ask relevant questions about the incident, keeping questions concise and sensitive. Based on previous answers, ask appropriate follow-up questions to gather important details about the incident."
+    };
+
     // Combine history with the current message
     const messages: ChatMessage[] = [
-      {
-        role: "system",
-        content: "You are Rachael, a compassionate women's safety officer. Ask relevant questions about the incident, one at a time. Keep questions concise and sensitive. Limit to 3 questions total. Based on previous answers, ask appropriate follow-up questions. After 3 questions or if you have enough information, provide a clear summary of the incident."
-      },
+      systemMessage,
       ...history,
       { role: "user", content: message }
     ];
@@ -40,7 +46,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "meta/llama-3.1-70b-instruct",
         messages,
-        temperature: 0.2,
+        temperature: isSummaryRequest ? 0.3 : 0.7, // Lower temperature for more focused summaries
         top_p: 0.7,
         max_tokens: 1024,
       }),
