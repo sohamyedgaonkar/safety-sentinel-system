@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+const NVIDIA_API_KEY = Deno.env.get('NVIDIA_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,16 +50,17 @@ Keep your questions concise and sensitive to the situation. Listen carefully to 
       { role: "user", content: message }
     ];
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${NVIDIA_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "meta/llama-3.1-70b-instruct",
         messages,
         temperature: isSummaryRequest ? 0.3 : 0.7, // Lower temperature for more focused summaries
+        top_p: 0.7,
         max_tokens: 1024,
       }),
     });
