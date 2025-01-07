@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 type Incident = {
   id: string;
@@ -26,6 +28,7 @@ type Incident = {
   location: string | null;
   reporter_name: string | null;
   log: string | null;
+  evidence_file: string | null;
 };
 
 type AuthorityIncidentListProps = {
@@ -34,6 +37,27 @@ type AuthorityIncidentListProps = {
 };
 
 const AuthorityIncidentList = ({ incidents, onStatusChange }: AuthorityIncidentListProps) => {
+  const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null);
+
+  const handleViewEvidence = async (evidenceFile: string) => {
+    try {
+      const { data: { publicUrl }, error } = await supabase
+        .storage
+        .from('evidence')
+        .getPublicUrl(evidenceFile);
+
+      if (error) {
+        console.error('Error getting evidence URL:', error);
+        return;
+      }
+
+      setEvidenceUrl(publicUrl);
+      window.open(publicUrl, '_blank');
+    } catch (error) {
+      console.error('Error viewing evidence:', error);
+    }
+  };
+
   return (
     <div className="grid gap-6">
       {incidents.map((incident) => (
@@ -66,6 +90,15 @@ const AuthorityIncidentList = ({ incidents, onStatusChange }: AuthorityIncidentL
                     </ScrollArea>
                   </DialogContent>
                 </Dialog>
+                {incident.evidence_file && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewEvidence(incident.evidence_file!)}
+                  >
+                    View Evidence
+                  </Button>
+                )}
                 <Select
                   defaultValue={incident.status}
                   onValueChange={(value) => onStatusChange(incident.id, value)}
