@@ -28,16 +28,24 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
 
     setIsLoading(true);
     try {
-      // Send the chat history to get a summary
+      console.log('Generating summary with messages:', messages);
       const { data, error } = await supabase.functions.invoke('chat-with-rachael', {
         body: { 
           message: "Please provide a professional summary of this incident based on our conversation.",
           history: messages,
-          isSummaryRequest: true // Flag to indicate we want a summary
+          isSummaryRequest: true
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      console.log('Summary response:', data);
+      if (!data?.choices?.[0]?.message?.content) {
+        throw new Error('Invalid response format from AI');
+      }
 
       const summary = data.choices[0].message.content;
       setIsCompleted(true);
@@ -69,11 +77,22 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
     setMessages(updatedMessages);
 
     try {
+      console.log('Sending message:', currentInput);
+      console.log('Message history:', messages);
+      
       const { data, error } = await supabase.functions.invoke('chat-with-rachael', {
         body: { message: currentInput, history: messages }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      console.log('AI response:', data);
+      if (!data?.choices?.[0]?.message?.content) {
+        throw new Error('Invalid response format from AI');
+      }
 
       const assistantMessage: ChatMessage = {
         role: "assistant",
@@ -84,6 +103,8 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
     } catch (error) {
       console.error('Error in chat:', error);
       toast.error("Failed to get response from Rachael. Please try again.");
+      // Remove the user's message if we couldn't get a response
+      setMessages(messages);
     } finally {
       setIsLoading(false);
     }
