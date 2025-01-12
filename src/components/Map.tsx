@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MapProps {
   onLocationSelect?: (location: string) => void;
@@ -15,10 +16,8 @@ const defaultCenter = {
   lng: 0
 };
 
-// Using a constant API key
-const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
-
 const Map: React.FC<MapProps> = ({ onLocationSelect }) => {
+  const { supabase } = useAuth();
   const [marker, setMarker] = useState<google.maps.LatLngLiteral | null>(null);
 
   const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
@@ -37,24 +36,14 @@ const Map: React.FC<MapProps> = ({ onLocationSelect }) => {
   }, [onLocationSelect]);
 
   return (
-    <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+    <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={defaultCenter}
         zoom={2}
         onClick={handleMapClick}
-        options={{
-          zoomControl: true,
-          streetViewControl: false,
-          mapTypeControl: false,
-          fullscreenControl: false
-        }}
       >
-        {marker && (
-          <Marker
-            position={marker}
-          />
-        )}
+        {marker && <Marker position={marker} />}
       </GoogleMap>
     </LoadScript>
   );
