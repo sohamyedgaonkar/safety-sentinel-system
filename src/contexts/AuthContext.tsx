@@ -45,12 +45,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (sessionError) {
           console.error('Session error:', sessionError);
-          if (sessionError.message.includes('refresh_token_not_found')) {
-            await supabaseClient.auth.signOut();
-            setUser(null);
-            setIsAuthority(false);
-            toast.error('Your session has expired. Please sign in again.');
+          // Handle refresh token errors specifically
+          if (sessionError.message.includes('refresh_token_not_found') || 
+              sessionError.message.includes('Invalid Refresh Token')) {
+            await handleRefreshTokenError(supabaseClient);
+            return;
           }
+          toast.error('Session error: ' + sessionError.message);
           return;
         }
 
@@ -68,8 +69,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const {
       data: { subscription },
-    } = supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-      console.log('Auth state changed:', _event, session?.user?.id);
+    } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully');
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsAuthority(false);
+        return;
+      }
+
       setUser(session?.user ?? null);
       if (session?.user) {
         await checkUserRole(session.user.id);
@@ -81,6 +93,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const handleRefreshTokenError = async (supabaseClient: SupabaseClient) => {
+    console.log('Handling refresh token error');
+    await supabaseClient.auth.signOut();
+    setUser(null);
+    setIsAuthority(false);
+    toast.error('Your session has expired. Please sign in again.');
+  };
+
   const checkUserRole = async (userId: string) => {
     if (!supabase) return false;
 
@@ -90,7 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .maybeSingle(); // Changed from .single() to .maybeSingle()
+        .maybeSingle();
 
       if (error) {
         console.error('Error checking user role:', error);
@@ -98,7 +118,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return false;
       }
 
-      // If no role found, default to non-authority
       if (!data) {
         console.log('No role found for user, defaulting to non-authority');
         setIsAuthority(false);
