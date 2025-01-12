@@ -128,10 +128,17 @@ const IncidentForm = () => {
       />
 
       <div className="space-y-2">
-        <Label>Location (Optional)</Label>
-        <div className="h-[200px] rounded-md overflow-hidden">
-          <Map onLocationSelect={(loc) => setLocation(loc)} />
+        <Label>Location</Label>
+        <div className="h-[300px] rounded-md overflow-hidden mb-2">
+          <Map 
+            onLocationSelect={(loc) => {
+              setLocation(loc);
+              toast.success("Location saved successfully");
+            }} 
+            initialLocation={location}
+          />
         </div>
+        <p className="text-sm text-gray-500">Click on the map to select a location</p>
       </div>
 
       <div className="space-y-2">
