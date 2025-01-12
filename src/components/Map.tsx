@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import React, { useState, useCallback } from "react";
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -8,83 +7,55 @@ interface MapProps {
   onLocationSelect?: (location: string) => void;
 }
 
+const containerStyle = {
+  width: '100%',
+  height: '100%'
+};
+
+const defaultCenter = {
+  lat: 0,
+  lng: 0
+};
+
 const Map: React.FC<MapProps> = ({ onLocationSelect }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
-  const [mapboxToken, setMapboxToken] = useState("");
+  const [googleMapsKey, setGoogleMapsKey] = useState("");
   const [inputValue, setInputValue] = useState("");
+  const [marker, setMarker] = useState<google.maps.LatLngLiteral | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
-      setMapboxToken(inputValue.trim());
-      console.log("Token set:", inputValue.trim());
+      setGoogleMapsKey(inputValue.trim());
+      console.log("API Key set:", inputValue.trim());
     }
   };
 
-  const handleMapClick = (e: mapboxgl.MapMouseEvent) => {
-    const { lng, lat } = e.lngLat;
+  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (!e.latLng) return;
     
-    if (marker.current) {
-      marker.current.remove();
-    }
+    const newPosition = {
+      lat: e.latLng.lat(),
+      lng: e.latLng.lng()
+    };
     
-    marker.current = new mapboxgl.Marker()
-      .setLngLat([lng, lat])
-      .addTo(map.current!);
-
+    setMarker(newPosition);
+    
     if (onLocationSelect) {
-      onLocationSelect(`${lat},${lng}`);
+      onLocationSelect(`${newPosition.lat},${newPosition.lng}`);
     }
-  };
+  }, [onLocationSelect]);
 
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const initializeMap = () => {
-      if (!mapboxToken) return;
-      
-      try {
-        mapboxgl.accessToken = mapboxToken;
-        
-        const newMap = new mapboxgl.Map({
-          container: mapContainer.current!,
-          style: "mapbox://styles/mapbox/streets-v11",
-          center: [-74.5, 40],
-          zoom: 9,
-        });
-
-        newMap.addControl(new mapboxgl.NavigationControl(), "top-right");
-        newMap.on('click', handleMapClick);
-
-        map.current = newMap;
-      } catch (error) {
-        console.error("Error initializing map:", error);
-      }
-    };
-
-    initializeMap();
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, [mapboxToken]);
-
-  return (
-    <div className="relative w-full h-full">
-      {!mapboxToken && (
+  if (!googleMapsKey) {
+    return (
+      <div className="relative w-full h-full">
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-md">
           <form onSubmit={handleSubmit} className="space-y-4 p-4 w-full max-w-md">
-            <p className="text-sm text-gray-600">Please enter your Mapbox token:</p>
+            <p className="text-sm text-gray-600">Please enter your Google Maps API key:</p>
             <Input
               type="text"
               value={inputValue}
               className="w-full"
-              placeholder="Enter Mapbox token"
+              placeholder="Enter Google Maps API key"
               onChange={(e) => setInputValue(e.target.value)}
             />
             <Button 
@@ -92,24 +63,46 @@ const Map: React.FC<MapProps> = ({ onLocationSelect }) => {
               className="w-full"
               disabled={!inputValue.trim()}
             >
-              Set Token
+              Set API Key
             </Button>
             <p className="text-xs text-gray-500">
-              Get your token at{" "}
+              Get your API key at{" "}
               <a
-                href="https://www.mapbox.com/"
+                href="https://console.cloud.google.com/google/maps-apis"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-500 hover:underline"
               >
-                mapbox.com
+                Google Cloud Console
               </a>
             </p>
           </form>
         </div>
-      )}
-      <div ref={mapContainer} className="absolute inset-0" />
-    </div>
+      </div>
+    );
+  }
+
+  return (
+    <LoadScript googleMapsApiKey={googleMapsKey}>
+      <GoogleMap
+        mapContainerStyle={containerStyle}
+        center={defaultCenter}
+        zoom={2}
+        onClick={handleMapClick}
+        options={{
+          zoomControl: true,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false
+        }}
+      >
+        {marker && (
+          <Marker
+            position={marker}
+          />
+        )}
+      </GoogleMap>
+    </LoadScript>
   );
 };
 
