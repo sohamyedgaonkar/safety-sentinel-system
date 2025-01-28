@@ -64,12 +64,14 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
     }
   }, [onLocationSelect]);
 
-  // Get the API key from environment variables
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   if (!apiKey) {
-    console.error("Google Maps API key is not set");
-    return <div>Error: Google Maps API key is not configured</div>;
+    return (
+      <div className="flex items-center justify-center h-full bg-gray-100 rounded-md">
+        <p className="text-gray-600">Loading map...</p>
+      </div>
+    );
   }
 
   return (
