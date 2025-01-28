@@ -27,6 +27,7 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
     }
     return null;
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleMapClick = useCallback(async (e: google.maps.MapMouseEvent) => {
     if (!e.latLng) return;
@@ -40,7 +41,6 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
     
     if (onLocationSelect) {
       try {
-        // Get the address from coordinates using Google Maps Geocoding service
         const geocoder = new google.maps.Geocoder();
         const response = await geocoder.geocode({ location: newPosition });
         
@@ -56,7 +56,6 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
         }
       } catch (error) {
         console.error("Error getting address:", error);
-        // If geocoding fails, just save the coordinates
         const locationString = `${newPosition.lat},${newPosition.lng}`;
         onLocationSelect(locationString);
         toast.success("Location coordinates saved");
@@ -69,28 +68,48 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
   if (!apiKey) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-100 rounded-md">
-        <p className="text-gray-600">Loading map...</p>
+        <p className="text-gray-600">Error: Google Maps API key is not configured</p>
       </div>
     );
   }
 
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
+  const handleError = (error: Error) => {
+    console.error("Google Maps error:", error);
+    toast.error("Failed to load Google Maps. Please try again later.");
+  };
+
   return (
-    <LoadScript googleMapsApiKey={apiKey}>
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={marker || defaultCenter}
-        zoom={marker ? 15 : 2}
-        onClick={handleMapClick}
-        options={{
-          zoomControl: true,
-          streetViewControl: false,
-          mapTypeControl: false,
-          fullscreenControl: false
-        }}
+    <>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-md z-10">
+          <p className="text-gray-600">Loading map...</p>
+        </div>
+      )}
+      <LoadScript 
+        googleMapsApiKey={apiKey}
+        onLoad={handleLoad}
+        onError={handleError}
       >
-        {marker && <Marker position={marker} />}
-      </GoogleMap>
-    </LoadScript>
+        <GoogleMap
+          mapContainerStyle={containerStyle}
+          center={marker || defaultCenter}
+          zoom={marker ? 15 : 2}
+          onClick={handleMapClick}
+          options={{
+            zoomControl: true,
+            streetViewControl: false,
+            mapTypeControl: false,
+            fullscreenControl: false
+          }}
+        >
+          {marker && <Marker position={marker} />}
+        </GoogleMap>
+      </LoadScript>
+    </>
   );
 };
 
