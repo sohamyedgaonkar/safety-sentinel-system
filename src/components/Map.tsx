@@ -27,9 +27,8 @@ interface MapEventsProps {
   onMapClick: (lat: number, lng: number) => void;
 }
 
-// Event handler component for map clicks
 const MapEvents: React.FC<MapEventsProps> = ({ onMapClick }) => {
-  const map = useMapEvents({
+  useMapEvents({
     click: (e) => {
       onMapClick(e.latlng.lat, e.latlng.lng);
     },
@@ -77,10 +76,13 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
     }
   }, [onLocationSelect]);
 
+  const defaultCenter: [number, number] = [20, 0];
+  const center = marker || defaultCenter;
+
   return (
     <div className="h-full w-full rounded-md overflow-hidden">
       <MapContainer
-        center={marker ? marker : [20, 0]}
+        center={center}
         zoom={marker ? 15 : 2}
         style={{ height: "100%", width: "100%" }}
         className="z-0"
