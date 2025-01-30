@@ -43,8 +43,8 @@ const MapComponent: React.FC<MapProps> = ({ onLocationSelect, initialLocation })
         })
       ],
       view: new View({
-        center: marker ? fromLonLat(marker) : fromLonLat([0, 20]),
-        zoom: marker ? 15 : 2
+        center: marker ? fromLonLat(marker) : fromLonLat([73.8567, 18.5204]), // Pune coordinates
+        zoom: marker ? 15 : 12 // Closer zoom for Pune
       })
     });
 
