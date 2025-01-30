@@ -27,7 +27,7 @@ interface MapEventsProps {
   onMapClick: (lat: number, lng: number) => void;
 }
 
-const MapEvents: React.FC<MapEventsProps> = ({ onMapClick }) => {
+const MapEvents = ({ onMapClick }: MapEventsProps) => {
   useMapEvents({
     click: (e) => {
       onMapClick(e.latlng.lat, e.latlng.lng);
@@ -52,7 +52,6 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
     
     if (onLocationSelect) {
       try {
-        // Using Nominatim for reverse geocoding (free OpenStreetMap service)
         const response = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
         );
@@ -77,12 +76,12 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
   }, [onLocationSelect]);
 
   const defaultCenter: [number, number] = [20, 0];
-  const center = marker || defaultCenter;
+  const mapCenter = marker || defaultCenter;
 
   return (
     <div className="h-full w-full rounded-md overflow-hidden">
       <MapContainer
-        center={center}
+        center={mapCenter}
         zoom={marker ? 15 : 2}
         style={{ height: "100%", width: "100%" }}
         className="z-0"
