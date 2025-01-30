@@ -28,7 +28,7 @@ interface MapEventsProps {
 }
 
 const MapEvents: React.FC<MapEventsProps> = ({ onMapClick }) => {
-  useMapEvents({
+  const map = useMapEvents({
     click: (e) => {
       onMapClick(e.latlng.lat, e.latlng.lng);
     },
@@ -88,8 +88,8 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
         scrollWheelZoom={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         <MapEvents onMapClick={handleMapClick} />
         {marker && (
