@@ -76,14 +76,15 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
   return (
     <div className="h-full w-full rounded-md overflow-hidden">
       <MapContainer
-        center={marker || [20, 0]} // Default center (can be adjusted)
+        center={marker || [20, 0]}
         zoom={marker ? 15 : 2}
         style={{ height: "100%", width: "100%" }}
         className="z-0"
+        scrollWheelZoom={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         <MapEvents onMapClick={handleMapClick} />
         {marker && (
