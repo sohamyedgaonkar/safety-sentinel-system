@@ -28,6 +28,7 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
     return null;
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const handleMapClick = useCallback(async (e: google.maps.MapMouseEvent) => {
     if (!e.latLng) return;
@@ -76,11 +77,14 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
 
   const handleLoad = () => {
     setIsLoading(false);
+    setMapError(null);
     console.log("Google Maps loaded successfully");
   };
 
   const handleError = (error: Error) => {
     console.error("Google Maps error:", error);
+    setMapError(error.message);
+    setIsLoading(false);
     toast.error("Failed to load Google Maps. Please try again later.");
   };
 
@@ -91,26 +95,32 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, initialLocation }) => {
           <p className="text-gray-600">Loading map...</p>
         </div>
       )}
-      <LoadScript 
-        googleMapsApiKey={apiKey}
-        onLoad={handleLoad}
-        onError={handleError}
-      >
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={marker || defaultCenter}
-          zoom={marker ? 15 : 2}
-          onClick={handleMapClick}
-          options={{
-            zoomControl: true,
-            streetViewControl: false,
-            mapTypeControl: false,
-            fullscreenControl: false
-          }}
+      {mapError ? (
+        <div className="flex items-center justify-center h-full bg-gray-100 rounded-md">
+          <p className="text-red-600">Error loading map: {mapError}</p>
+        </div>
+      ) : (
+        <LoadScript 
+          googleMapsApiKey={apiKey}
+          onLoad={handleLoad}
+          onError={handleError}
         >
-          {marker && <Marker position={marker} />}
-        </GoogleMap>
-      </LoadScript>
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={marker || defaultCenter}
+            zoom={marker ? 15 : 2}
+            onClick={handleMapClick}
+            options={{
+              zoomControl: true,
+              streetViewControl: false,
+              mapTypeControl: false,
+              fullscreenControl: false
+            }}
+          >
+            {marker && <Marker position={marker} />}
+          </GoogleMap>
+        </LoadScript>
+      )}
     </>
   );
 };
