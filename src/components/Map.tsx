@@ -27,8 +27,8 @@ interface MapEventsProps {
   onMapClick: (lat: number, lng: number) => void;
 }
 
-const MapEvents = ({ onMapClick }: MapEventsProps) => {
-  useMapEvents({
+const MapEvents: React.FC<MapEventsProps> = ({ onMapClick }) => {
+  const map = useMapEvents({
     click: (e) => {
       onMapClick(e.latlng.lat, e.latlng.lng);
     },
