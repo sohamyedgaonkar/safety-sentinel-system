@@ -15,7 +15,7 @@ const twilio = require("twilio");
 // For ESM you could also use: import twilio from "twilio";
 
 const accountSid = "ACa52693c3730b55eb4e3a3d1307d538c6";
-const authToken = "0919ab90ef40b208d2aa293bdcce035b";
+const authToken = "a2df68fc47293a546a5d03cdd4e10876";
 const client = twilio(accountSid, authToken);
 
 async function createCall() {
