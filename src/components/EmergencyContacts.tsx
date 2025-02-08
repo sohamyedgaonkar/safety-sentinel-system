@@ -1,4 +1,3 @@
-import React from "react";
 import { Phone, Shield, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,28 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-// Directly import and initialize the Twilio client.
-// WARNING: This exposes your credentials in the client bundle.
-import twilio from "twilio";
-// For ESM you could also use: import twilio from "twilio";
-
-const accountSid = "ACa52693c3730b55eb4e3a3d1307d538c6";
-const authToken = "a2df68fc47293a546a5d03cdd4e10876";
-const client = twilio(accountSid, authToken);
-
-async function createCall() {
-  try {
-    const call = await client.calls.create({
-      from: "+17152603930",            // Your Twilio phone number
-      to: "+918468976955",              // Static destination number
-      url: "http://demo.twilio.com/docs/voice.xml", // URL for TwiML instructions
-    });
-    console.log("Call initiated. SID:", call.sid);
-  } catch (error) {
-    console.error("Error initiating call:", error);
-  }
-}
 
 const EmergencyContacts = () => {
   const contacts = [
@@ -68,7 +45,7 @@ const EmergencyContacts = () => {
             <Button
               variant="outline"
               className="w-full"
-              onClick={createCall} // This button always calls the static number
+              onClick={() => window.location.href = tel:${contact.number}}
             >
               {contact.number}
             </Button>
