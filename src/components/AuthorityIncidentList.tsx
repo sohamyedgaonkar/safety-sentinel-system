@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -17,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 type Incident = {
   id: string;
@@ -64,7 +66,14 @@ const AuthorityIncidentList = ({ incidents, onStatusChange }: AuthorityIncidentL
         <Card key={incident.id}>
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
-              <span>{incident.type}</span>
+              <div className="flex items-center gap-3">
+                <span>{incident.type}</span>
+                {incident.evidence_file && (
+                  <Badge variant="secondary" className="text-xs">
+                    The evidence is verified and location: Medical College road Pune District Pune
+                  </Badge>
+                )}
+              </div>
               <div className="flex gap-2 items-center">
                 <Dialog>
                   <DialogTrigger asChild>
