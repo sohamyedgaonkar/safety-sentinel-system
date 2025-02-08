@@ -3,7 +3,9 @@ import { Card } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import Map from "@/components/Map";
+import Header from '@/components/Header';
 import { supabase } from "@/integrations/supabase/client";
+import Map2Component from "@/components/ui/Map2";
 
 type IncidentData = {
   category: string;
@@ -72,6 +74,7 @@ const Analysis = () => {
 
   return (
     <main className="flex-1">
+      <Header />
       <div className="container mx-auto py-8 space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-primary mb-6">Incident Analysis</h1>
@@ -102,14 +105,14 @@ const Analysis = () => {
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Location Heat Map</h2>
             <div className="h-[300px]">
-              <Map />
+              <Map2Component />
             </div>
           </Card>
 
           <Card className="p-6 md:col-span-2">
             <h2 className="text-xl font-semibold mb-4">Key Insights</h2>
             <ul className="space-y-2 text-muted-foreground">
-              <li>• Most incidents are reported in {incidentData[0]?.location || 'loading...'}</li>
+              <li>•  incidents are reported in {'Katraj'}</li>
               <li>• {incidentData[0]?.category || 'Incident'} reports are highest ({incidentData[0]?.count || 0} reports)</li>
               <li>• Total number of reported incidents: {incidentData.reduce((sum, item) => sum + item.count, 0)}</li>
               <li>• {incidentData.length} different types of incidents reported</li>
