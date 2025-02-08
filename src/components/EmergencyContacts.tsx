@@ -11,7 +11,7 @@ import {
 
 // Directly import and initialize the Twilio client.
 // WARNING: This exposes your credentials in the client bundle.
-const twilio = require("twilio");
+import twilio from "twilio";
 // For ESM you could also use: import twilio from "twilio";
 
 const accountSid = "ACa52693c3730b55eb4e3a3d1307d538c6";
