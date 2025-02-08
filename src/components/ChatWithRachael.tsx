@@ -31,7 +31,7 @@ const ChatWithRachael = ({ onComplete }: ChatWithRachaelProps) => {
       console.log('Generating summary with messages:', messages);
       const { data, error } = await supabase.functions.invoke('chat-with-rachael', {
         body: { 
-          message: "Please provide a professional summary of this incident based on our conversation and add a Paragragh commenting about authenticity of the incident Reported . Provide Facts and comments supporting your Authenticity Report.",
+          message: "Please provide a professional summary of this incident based on our conversation and add a Paragragh commenting about authenticity of the incident Reported . Provide Facts and comments supporting your Authenticity Report. Add a authenticity Percentage at the end",
           history: messages,
           isSummaryRequest: true
         }
