@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 
 import Map from "@/components/Map";
 import Header from '@/components/Header';
 import { supabase } from "@/integrations/supabase/client";
-import Map2Component from "@/components/ui/Map2";
+import Map2Component from "@/components/Map2";
 
 type IncidentData = {
   category: string;
