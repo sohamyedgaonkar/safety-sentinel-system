@@ -1,3 +1,4 @@
+
 import { Phone, Shield, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,7 +46,7 @@ const EmergencyContacts = () => {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => window.location.href = tel:${contact.number}}
+              onClick={() => window.location.href = `tel:${contact.number}`}
             >
               {contact.number}
             </Button>
