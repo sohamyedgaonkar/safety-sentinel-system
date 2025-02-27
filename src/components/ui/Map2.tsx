@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Map as OLMap, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
@@ -76,7 +77,7 @@ const getHotspotStyle = (type: string, name: string, radius: number, count: numb
       stroke: new Stroke({ color: borderColors[type] || '#666666', width: 2 })
     }),
     text: new Text({
-      text: ${name}\n(${count} incidents),
+      text: `${name}\n(${count} incidents)`,
       offsetY: -(radius * 4 + 10),
       fill: new Fill({ color: '#333333' }),
       stroke: new Stroke({ color: '#ffffff', width: 3 }),
@@ -110,7 +111,7 @@ const Map2Component: React.FC<MapProps> = ({ onLocationSelect, initialLocation }
         const [lat, lon] = incident.location.split(',').map(Number);
         
         // Round coordinates to create clusters
-        const key = ${lat.toFixed(3)},${lon.toFixed(3)};
+        const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
         
         if (!locationClusters[key]) {
           locationClusters[key] = {
@@ -126,7 +127,7 @@ const Map2Component: React.FC<MapProps> = ({ onLocationSelect, initialLocation }
     const newZones: Zone[] = Object.entries(locationClusters).map(([location, data]) => {
       const [lat, lon] = location.split(',').map(Number);
       return {
-        name: ${data.type} Risk Zone,
+        name: `${data.type} Risk Zone`,
         coordinates: [lon, lat],
         type: getZoneType(data.count),
         radius: getZoneRadius(data.count),
@@ -248,17 +249,17 @@ const Map2Component: React.FC<MapProps> = ({ onLocationSelect, initialLocation }
     if (onLocationSelect) {
       try {
         const response = await fetch(
-          https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
         );
         const data = await response.json();
         
         // Always store as coordinate string for consistency
-        const locationString = ${lat},${lon};
+        const locationString = `${lat},${lon}`;
         onLocationSelect(locationString);
         toast.success("Location coordinates saved");
       } catch (error) {
         console.error("Error getting address:", error);
-        const locationString = ${lat},${lon};
+        const locationString = `${lat},${lon}`;
         onLocationSelect(locationString);
         toast.success("Location coordinates saved");
       }
