@@ -53,6 +53,7 @@ export type Database = {
           is_anonymous: boolean | null
           location: string | null
           log: string | null
+          program_name: string | null
           reported_at: string | null
           reporter_name: string | null
           status: string | null
@@ -60,6 +61,7 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
           user_role: string | null
+          verification: string | null
         }
         Insert: {
           authorities_involved?: string[] | null
@@ -69,6 +71,7 @@ export type Database = {
           is_anonymous?: boolean | null
           location?: string | null
           log?: string | null
+          program_name?: string | null
           reported_at?: string | null
           reporter_name?: string | null
           status?: string | null
@@ -76,6 +79,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           user_role?: string | null
+          verification?: string | null
         }
         Update: {
           authorities_involved?: string[] | null
@@ -85,6 +89,7 @@ export type Database = {
           is_anonymous?: boolean | null
           location?: string | null
           log?: string | null
+          program_name?: string | null
           reported_at?: string | null
           reporter_name?: string | null
           status?: string | null
@@ -92,6 +97,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           user_role?: string | null
+          verification?: string | null
         }
         Relationships: []
       }

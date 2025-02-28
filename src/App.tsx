@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +14,7 @@ import ApplicantForm from "./pages/ApplicantForm";
 import AuthorityDashboard from "./pages/AuthorityDashboard";
 import AuthorityLogin from "./pages/AuthorityLogin";
 import ChatWithRachaelPage from "./pages/ChatWithRachaelPage";
+import Donor from "./pages/Donor";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +35,7 @@ const App = () => (
             <Route path="/authority" element={<AuthorityDashboard />} />
             <Route path="/authority-login" element={<AuthorityLogin />} />
             <Route path="/chat-with-rachael" element={<ChatWithRachaelPage />} />
+            <Route path="/donor" element={<Donor />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

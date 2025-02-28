@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,9 @@ const Header = () => {
             </Link>
             <Link to="/analysis" className="text-gray-600 hover:text-primary">
               Analysis
+            </Link>
+            <Link to="/donor" className="text-gray-600 hover:text-primary">
+              Donor
             </Link>
             {user ? (
               <>
